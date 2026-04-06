@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#f4bf40",
+              "on-secondary-fixed-variant": "#584416",
+              "surface-dim": "#ded9da",
+              "on-background": "#1d1b1c",
+              "on-surface": "#1d1b1c",
+              "on-primary-fixed-variant": "#5b4300",
+              "on-secondary-fixed": "#261a00",
+              "on-primary-container": "#6e5100",
+              "inverse-surface": "#323031",
+              "on-error": "#ffffff",
+              "primary-container": "#fac445",
+              "tertiary-fixed": "#b5ebff",
+              "tertiary-fixed-dim": "#5dd5fa",
+              "outline": "#817662",
+              "tertiary-container": "#64daff",
+              "primary": "#795900",
+              "secondary-fixed": "#fedfa3",
+              "surface-container-low": "#f8f2f3",
+              "on-error-container": "#93000a",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#786131",
+              "secondary": "#715b2c",
+              "on-tertiary-container": "#005e73",
+              "surface-container-high": "#ede7e8",
+              "on-tertiary-fixed": "#001f28",
+              "tertiary": "#00677e",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fef8f9",
+              "on-primary-fixed": "#261a00",
+              "surface-container": "#f3eced",
+              "primary-fixed-dim": "#f4bf40",
+              "on-surface-variant": "#4f4635",
+              "surface-container-highest": "#e7e1e2",
+              "surface-tint": "#795900",
+              "surface-bright": "#fef8f9",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#d2c5ae",
+              "secondary-container": "#fedfa3",
+              "primary-fixed": "#ffdf9f",
+              "secondary-fixed-dim": "#e0c389",
+              "inverse-on-surface": "#f5eff0",
+              "on-tertiary-fixed-variant": "#004e60",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e7e1e2",
+              "error": "#ba1a1a",
+              "error-container": "#ffdad6",
+              "surface": "#fef8f9"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fef8f9;
+        }
+        /* Custom Clock Wheel Styling */
+        .clock-wheel::-webkit-scrollbar { display: none; }
+        .clock-wheel { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopAppBar -->
+<header class="bg-[#fef8f9] dark:bg-[#1D1B1C] flex flex-row-reverse justify-between items-center w-full px-6 py-4 fixed top-0 z-50 transition-all duration-300 active:scale-95">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden">
+<img alt="صورة الملف الشخصي" class="w-full h-full object-cover" data-alt="Professional close-up portrait of a middle-eastern businessman with a friendly expression, studio lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE0GBhQUdDgMriNPju17xR6tbPdoZLU7XztXAxoxcwZgVZ2LciQpj9SHKZ_SyY-ktW9fcXGKLtIEHaPgm5An1KjfMrIdDFoyrH0WHBqZ7t5I15Cw9ZBYLd64DvQ8XGpL6tvP8wzqSfLl_Pwt2l1CqYmudC5Kv4D_E8U4VisJhlEUepvCqnaC-G4LEYYS1GmSCNemjlqrIek7C_JJnsgR9ESZakwIg9vU7GdFHdXY4SZDuN91KqBhMXYbcSu04KkyJain5fJF56iZU2"/>
+</div>
+</div>
+<h1 class="font-['Inter'] font-bold text-2xl text-[#1D1B1C] dark:text-white">تفاصيل الحجز</h1>
+<button class="w-10 h-10 flex items-center justify-center text-[#795900] dark:text-[#FAC445]">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-2xl mx-auto">
+<!-- Progress Stepper (Visual Only) -->
+<div class="flex justify-between items-center mb-10 px-4">
+<div class="flex flex-col items-center gap-2">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold">1</div>
+<span class="text-xs font-medium text-on-surface">التفاصيل</span>
+</div>
+<div class="flex-1 h-[2px] bg-outline-variant mx-2 mb-6 opacity-20"></div>
+<div class="flex flex-col items-center gap-2 opacity-40">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">2</div>
+<span class="text-xs font-medium text-on-surface-variant">المركبة</span>
+</div>
+<div class="flex-1 h-[2px] bg-outline-variant mx-2 mb-6 opacity-20"></div>
+<div class="flex flex-col items-center gap-2 opacity-40">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold">3</div>
+<span class="text-xs font-medium text-on-surface-variant">الدفع</span>
+</div>
+</div>
+<div class="space-y-8">
+<!-- Location Section -->
+<section class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_4px_24px_rgba(29,27,28,0.04)]">
+<h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">location_on</span>
+                    موقع الانطلاق
+                </h2>
+<div class="space-y-4">
+<div class="relative">
+<label class="block text-sm font-medium text-on-surface-variant mb-2 mr-1">المنطقة في بغداد</label>
+<select class="w-full bg-surface-container-low border-none rounded-xl py-4 px-4 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all appearance-none">
+<option value="">اختر المنطقة</option>
+<option value="karrada">الكرادة</option>
+<option value="mansour">المنصور</option>
+<option value="jadriya">الجادرية</option>
+<option value="yarmouk">اليرموك</option>
+<option value="adhamiya">الأعظمية</option>
+</select>
+<span class="material-symbols-outlined absolute left-4 top-[46px] pointer-events-none text-on-surface-variant">expand_more</span>
+</div>
+<div>
+<label class="block text-sm font-medium text-on-surface-variant mb-2 mr-1">رقم الرحلة الجوية (اختياري)</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl py-4 px-4 text-on-surface focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-on-surface-variant/40" placeholder="مثال: IA123" type="text"/>
+</div>
+</div>
+</section>
+<!-- Passenger & Luggage Asymmetric Layout -->
+<div class="grid grid-cols-2 gap-4">
+<section class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_4px_24px_rgba(29,27,28,0.04)]">
+<span class="material-symbols-outlined text-primary mb-2">person</span>
+<label class="block text-sm font-medium text-on-surface-variant mb-3">المسافرون</label>
+<div class="flex items-center justify-between bg-surface-container-low rounded-xl p-2">
+<button class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="font-bold text-lg">2</span>
+<button class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</section>
+<section class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_4px_24px_rgba(29,27,28,0.04)]">
+<span class="material-symbols-outlined text-primary mb-2">luggage</span>
+<label class="block text-sm font-medium text-on-surface-variant mb-3">الحقائب</label>
+<div class="flex items-center justify-between bg-surface-container-low rounded-xl p-2">
+<button class="w-8 h-8 rounded-lg bg-surface-container-highest flex items-center justify-center text-on-surface active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm">remove</span>
+</button>
+<span class="font-bold text-lg">3</span>
+<button class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-sm">add</span>
+</button>
+</div>
+</section>
+</div>
+<!-- Date & Time Picker (Clock Wheel UI) -->
+<section class="bg-surface-container-lowest p-6 rounded-3xl shadow-[0_4px_24px_rgba(29,27,28,0.04)]">
+<h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">schedule</span>
+                    وقت التوصيل
+                </h2>
+<div class="flex flex-col gap-6">
+<!-- Date Strip -->
+<div class="flex gap-3 overflow-x-auto pb-2 scroll-smooth no-scrollbar">
+<div class="flex-shrink-0 w-16 h-20 rounded-2xl bg-primary-container flex flex-col items-center justify-center text-on-primary-container ring-4 ring-primary-container/10">
+<span class="text-xs font-bold">اليوم</span>
+<span class="text-xl font-black">24</span>
+</div>
+<div class="flex-shrink-0 w-16 h-20 rounded-2xl bg-surface-container-low flex flex-col items-center justify-center text-on-surface-variant">
+<span class="text-xs">الأحد</span>
+<span class="text-xl font-bold">25</span>
+</div>
+<div class="flex-shrink-0 w-16 h-20 rounded-2xl bg-surface-container-low flex flex-col items-center justify-center text-on-surface-variant">
+<span class="text-xs">الاثنين</span>
+<span class="text-xl font-bold">26</span>
+</div>
+<div class="flex-shrink-0 w-16 h-20 rounded-2xl bg-surface-container-low flex flex-col items-center justify-center text-on-surface-variant">
+<span class="text-xs">الثلاثاء</span>
+<span class="text-xl font-bold">27</span>
+</div>
+</div>
+<!-- Clock Wheel -->
+<div class="relative h-40 flex items-center justify-center bg-surface-container-low rounded-2xl overflow-hidden">
+<!-- Selection Highlight Overlay -->
+<div class="absolute inset-x-0 h-12 bg-primary-container/20 border-y border-primary-container pointer-events-none"></div>
+<div class="flex w-full justify-around px-10">
+<!-- Hours -->
+<div class="clock-wheel h-40 overflow-y-scroll snap-y snap-mandatory text-center w-12">
+<div class="h-14"></div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">08</div>
+<div class="h-12 flex items-center justify-center snap-center text-2xl font-black text-primary">09</div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">10</div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">11</div>
+<div class="h-14"></div>
+</div>
+<div class="flex items-center text-2xl font-black">:</div>
+<!-- Minutes -->
+<div class="clock-wheel h-40 overflow-y-scroll snap-y snap-mandatory text-center w-12">
+<div class="h-14"></div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">15</div>
+<div class="h-12 flex items-center justify-center snap-center text-2xl font-black text-primary">30</div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">45</div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">00</div>
+<div class="h-14"></div>
+</div>
+<!-- AM/PM -->
+<div class="clock-wheel h-40 overflow-y-scroll snap-y snap-mandatory text-center w-12">
+<div class="h-14"></div>
+<div class="h-12 flex items-center justify-center snap-center text-2xl font-black text-primary">صباحاً</div>
+<div class="h-12 flex items-center justify-center snap-center text-lg font-bold">مساءً</div>
+<div class="h-14"></div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Primary Action -->
+<div class="mt-10 px-2">
+<button class="w-full bg-primary-container hover:bg-[#f4bf40] text-on-primary-container font-black py-5 rounded-2xl text-xl shadow-[0_12px_30px_rgba(250,196,69,0.25)] transition-all duration-300 active:scale-95">
+                متابعة
+            </button>
+<p class="text-center text-on-surface-variant text-xs mt-4 opacity-60">
+                من خلال المتابعة، أنت توافق على شروط الخدمة والخصوصية
+            </p>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-[#1D1B1C]/80 backdrop-blur-xl rounded-t-3xl border-t border-[#d2c5ae]/15 shadow-[0_-4px_20px_rgba(29,27,28,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900]" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[12px] font-medium">الرئيسية</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#FAC445] text-[#1D1B1C] rounded-2xl px-5 py-2 transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+<span class="font-['Inter'] text-[12px] font-medium">حجوزاتي</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900]" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium">المحفظة</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900]" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[12px] font-medium">الحساب</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#f4bf40",
+              "on-secondary-fixed-variant": "#584416",
+              "surface-dim": "#ded9da",
+              "on-background": "#1d1b1c",
+              "on-surface": "#1d1b1c",
+              "on-primary-fixed-variant": "#5b4300",
+              "on-secondary-fixed": "#261a00",
+              "on-primary-container": "#6e5100",
+              "inverse-surface": "#323031",
+              "on-error": "#ffffff",
+              "primary-container": "#fac445",
+              "tertiary-fixed": "#b5ebff",
+              "tertiary-fixed-dim": "#5dd5fa",
+              "outline": "#817662",
+              "tertiary-container": "#64daff",
+              "primary": "#795900",
+              "secondary-fixed": "#fedfa3",
+              "surface-container-low": "#f8f2f3",
+              "on-error-container": "#93000a",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#786131",
+              "secondary": "#715b2c",
+              "on-tertiary-container": "#005e73",
+              "surface-container-high": "#ede7e8",
+              "on-tertiary-fixed": "#001f28",
+              "tertiary": "#00677e",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fef8f9",
+              "on-primary-fixed": "#261a00",
+              "surface-container": "#f3eced",
+              "primary-fixed-dim": "#f4bf40",
+              "on-surface-variant": "#4f4635",
+              "surface-container-highest": "#e7e1e2",
+              "surface-tint": "#795900",
+              "surface-bright": "#fef8f9",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#d2c5ae",
+              "secondary-container": "#fedfa3",
+              "primary-fixed": "#ffdf9f",
+              "secondary-fixed-dim": "#e0c389",
+              "inverse-on-surface": "#f5eff0",
+              "on-tertiary-fixed-variant": "#004e60",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e7e1e2",
+              "error": "#ba1a1a",
+              "error-container": "#ffdad6",
+              "surface": "#fef8f9"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body { font-family: 'Inter', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#fef8f9] dark:bg-[#1D1B1C] fixed top-0 w-full z-50 flex flex-row-reverse justify-between items-center w-full px-6 py-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#795900] dark:text-[#FAC445] transition-all duration-300 active:scale-95 cursor-pointer">arrow_forward</span>
+<h1 class="font-['Inter'] font-bold text-2xl text-[#1D1B1C] dark:text-white">الرئيسية</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container-high overflow-hidden border-2 border-primary-container">
+<img alt="صورة الملف الشخصي" data-alt="professional portrait of a middle-aged man with a friendly smile, clean studio background, soft lighting, corporate headshot style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBYsSg8b2g9unBPpgld9yN4vv4vMdWl2A8YGUTeSH1n-DI7nWmLGWhH_FQMWPdrK0OGQGzOU_SI4Ez12kFrwcnHjbsedg02WgQAjEFRj-rVz9RkwbpQeLAk4xdg8wgcArfChNiCTXFmf7Wcw9JD4jIvvBqFEtb0B2PydOVmmLjV7PFkvA4vMlq5HhYi3vMVUTYZ4Lq4_XKPgDvfBKHUxoRh8WbhfZdh0AIdt-kqs-r7iBAhWzC_tBqtbEmgtQLOwpnW4WkAIitbucC"/>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Route Summary Card -->
+<section class="bg-surface-container-low rounded-xl p-5 mb-8 flex flex-col gap-4">
+<div class="flex items-start gap-4">
+<div class="flex flex-col items-center gap-1 pt-1">
+<div class="w-2.5 h-2.5 rounded-full bg-primary"></div>
+<div class="w-0.5 h-10 border-r-2 border-dotted border-outline-variant"></div>
+<div class="w-2.5 h-2.5 rounded-full border-2 border-primary"></div>
+</div>
+<div class="flex flex-col gap-4 flex-1">
+<div>
+<p class="text-xs text-on-surface-variant mb-1">نقطة الانطلاق</p>
+<p class="font-bold text-on-surface">مطار بغداد الدولي، صالة المسافرين</p>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant mb-1">وجهة الوصول</p>
+<p class="font-bold text-on-surface">فندق بابل، منطقة الكرادة</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Selection -->
+<div class="mb-6">
+<h2 class="text-xl font-black mb-4">اختر نوع السيارة</h2>
+<div class="grid grid-cols-1 gap-4">
+<!-- VIP Category (Selected) -->
+<div class="relative overflow-hidden bg-surface-container-lowest rounded-xl p-1 ring-2 ring-primary-container shadow-lg transition-all duration-300">
+<div class="flex flex-row-reverse items-center gap-4 p-4">
+<div class="w-1/2">
+<img alt="سيارة في آي بي" class="w-full h-auto object-contain" data-alt="sleek black luxury SUV parked in a modern minimalist garage with dramatic overhead lighting and polished concrete floor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHA__m47LXivXPukcVEucR7jve3RUT0MqVvVG556XgaP8xD24CYcLKtsHlg2AT1i8MkEzcnSvA0hziu9EcReCixmqYq8RVYd2AwPvh1dwGEByV3-VeH6qYAFnrN2_9uJsjrPIRFNMYybjZsYSTflDukzHY_Eb0yJ9EBbLLDWVv1D28yj6240T45UJUzvVbK_WwtNDHJMURAYq5ZZYv8gO5TnlhAPwPu6vvgXIh93Vrt6punXFVMLkYDjPMgKZaL1WQly9tjYqZDX5y"/>
+</div>
+<div class="w-1/2 text-right">
+<span class="inline-block bg-primary-container text-on-primary-container text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">في آي بي</span>
+<h3 class="text-lg font-bold text-on-surface">مرسيدس S-Class</h3>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">ac_unit</span>
+<span class="text-xs">تكييف مركزي</span>
+<span class="material-symbols-outlined text-sm">luggage</span>
+<span class="text-xs">4 حقائب</span>
+</div>
+<div class="mt-4">
+<span class="text-2xl font-black text-primary">$45.00</span>
+<span class="text-xs text-on-surface-variant"> / 65,000 د.ع</span>
+</div>
+</div>
+</div>
+<div class="absolute top-4 left-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Plus Category -->
+<div class="bg-surface-container-low rounded-xl p-1 hover:bg-surface-container transition-all duration-300">
+<div class="flex flex-row-reverse items-center gap-4 p-4">
+<div class="w-1/2">
+<img alt="سيارة بلس" class="w-full h-auto object-contain opacity-80" data-alt="modern silver sedan driving on a clean city street at dusk with soft ambient lights reflecting on the car body" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw4AoKdXw7z-hqAqSy8MRwYcNAPAVy4GFAAvBd1iVwDgous44j3zPxBbANKIG2G8AmCWpO-K7UC7KRJHlExDxxybReN-qABW-ewrB8LADf8_eTVERUL-ER1VmDC3J2pD_g3KpNXRS4qpbDyQmo5kjFJvheFWUMKt2ZlXXF5LJdxk1eN_LRGxZyg6-VEqM3kPqSc-JMe9Rjc9v6kiOPyzfoXZYNleTaT2f21ThTwq9vkzZ11jRKB4M6IXa0SezOGbBvum2Uy47FgjY4"/>
+</div>
+<div class="w-1/2 text-right">
+<span class="inline-block bg-surface-container-highest text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">بلس</span>
+<h3 class="text-lg font-bold text-on-surface">كيا سيراتو</h3>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">ac_unit</span>
+<span class="text-xs">تكييف</span>
+<span class="material-symbols-outlined text-sm">luggage</span>
+<span class="text-xs">3 حقائب</span>
+</div>
+<div class="mt-4">
+<span class="text-2xl font-black text-on-surface">$25.00</span>
+<span class="text-xs text-on-surface-variant"> / 37,000 د.ع</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Economy Category -->
+<div class="bg-surface-container-low rounded-xl p-1 hover:bg-surface-container transition-all duration-300">
+<div class="flex flex-row-reverse items-center gap-4 p-4">
+<div class="w-1/2">
+<img alt="سيارة اقتصادية" class="w-full h-auto object-contain opacity-80" data-alt="white compact toyota corolla car isolated on a neutral gray studio background with soft professional lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxvoENcrF5olGf6Doq5P6doum9RPeZ7Z0vOjULbRIdJ3G6YPjEA2Fixppp9Pe5Ej8Slu8gRzQXYswhh1dsX8sMErGYNdrb5UCmXVoh-rVWT4XMfsWNX9cpZSU-NxkS7kjohS9861NaufsBbKKodo6ClA8v6FTX8us5JjhJCh6CS3mDQUmDXriO-VM2ac46L8ZcRq9VldswgnzUY7vB2JPKtfibuMMpGyej6sipYedklmUcWipM5Ja7FOLT6sMNG3l22V1L07CyM-NZ"/>
+</div>
+<div class="w-1/2 text-right">
+<span class="inline-block bg-surface-container-highest text-on-surface-variant text-[10px] font-bold px-2 py-0.5 rounded-full mb-2">اقتصادية</span>
+<h3 class="text-lg font-bold text-on-surface">تويوتا كورولا</h3>
+<div class="flex items-center gap-2 mt-1 text-on-surface-variant">
+<span class="material-symbols-outlined text-sm">ac_unit</span>
+<span class="text-xs">تكييف</span>
+<span class="material-symbols-outlined text-sm">luggage</span>
+<span class="text-xs">2 حقيبة</span>
+</div>
+<div class="mt-4">
+<span class="text-2xl font-black text-on-surface">$15.00</span>
+<span class="text-xs text-on-surface-variant"> / 22,000 د.ع</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<div class="fixed bottom-24 left-0 w-full px-6 z-40">
+<button class="w-full bg-primary-container text-on-primary-container font-black text-lg py-4 rounded-xl shadow-xl transition-all duration-300 active:scale-95 flex items-center justify-center gap-2">
+<span>تأكيد حجز في آي بي</span>
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-[#1D1B1C]/80 backdrop-blur-xl border-t border-[#d2c5ae]/15 shadow-[0_-4px_20px_rgba(29,27,28,0.04)] rounded-t-3xl">
+<div class="flex flex-col items-center justify-center bg-[#FAC445] text-[#1D1B1C] rounded-2xl px-5 py-2 transition-transform duration-200 active:scale-90 cursor-pointer">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">الرئيسية</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445] cursor-pointer">
+<span class="material-symbols-outlined">directions_car</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">حجوزاتي</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445] cursor-pointer">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">المحفظة</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445] cursor-pointer">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[12px] font-medium mt-1">الحساب</span>
+</div>
+</nav>
+</body></html>

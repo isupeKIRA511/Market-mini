@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>تأكيد الحجز وتتبع الرحلة</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#f4bf40",
+              "on-secondary-fixed-variant": "#584416",
+              "surface-dim": "#ded9da",
+              "on-background": "#1d1b1c",
+              "on-surface": "#1d1b1c",
+              "on-primary-fixed-variant": "#5b4300",
+              "on-secondary-fixed": "#261a00",
+              "on-primary-container": "#6e5100",
+              "inverse-surface": "#323031",
+              "on-error": "#ffffff",
+              "primary-container": "#fac445",
+              "tertiary-fixed": "#b5ebff",
+              "tertiary-fixed-dim": "#5dd5fa",
+              "outline": "#817662",
+              "tertiary-container": "#64daff",
+              "primary": "#795900",
+              "secondary-fixed": "#fedfa3",
+              "surface-container-low": "#f8f2f3",
+              "on-error-container": "#93000a",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#786131",
+              "secondary": "#715b2c",
+              "on-tertiary-container": "#005e73",
+              "surface-container-high": "#ede7e8",
+              "on-tertiary-fixed": "#001f28",
+              "tertiary": "#00677e",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fef8f9",
+              "on-primary-fixed": "#261a00",
+              "surface-container": "#f3eced",
+              "primary-fixed-dim": "#f4bf40",
+              "on-surface-variant": "#4f4635",
+              "surface-container-highest": "#e7e1e2",
+              "surface-tint": "#795900",
+              "surface-bright": "#fef8f9",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#d2c5ae",
+              "secondary-container": "#fedfa3",
+              "primary-fixed": "#ffdf9f",
+              "secondary-fixed-dim": "#e0c389",
+              "inverse-on-surface": "#f5eff0",
+              "on-tertiary-fixed-variant": "#004e60",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e7e1e2",
+              "error": "#ba1a1a",
+              "error-container": "#ffdad6",
+              "surface": "#fef8f9"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fef8f9;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-on-surface overflow-x-hidden pb-32">
+<!-- TopAppBar -->
+<header class="bg-[#fef8f9] dark:bg-[#1D1B1C] flex flex-row-reverse justify-between items-center w-full px-6 py-4 fixed top-0 z-50 transition-all duration-300">
+<div class="flex items-center gap-4">
+<span class="font-['Inter'] font-bold text-2xl text-[#1D1B1C] dark:text-white">تفاصيل الرحلة</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="transition-all duration-300 active:scale-95 text-[#795900] dark:text-[#FAC445]">
+<span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="w-10 h-10 rounded-full bg-surface-container overflow-hidden">
+<img alt="صورة الملف الشخصي" data-alt="professional portrait of a middle-aged man with a friendly smile, clean background, high-end corporate style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUY9H2bnCTqwos9K4THU3TlfuejCWMyMRAkm72R5wnBYV_HoVj3B_3uzEUFVZ13ea1Z-nm9JeP9qFJjPg_6UKb2PLAqp30LVP7Pbd3Stj3eZ7HcRP3_L-OT1lXQ8J7EDbzYkU5ZXvQRzGt_TYIQkJH0OmMZcsEYDIkPdTX-ppWT4UwGNiNjx5z-OQmW2MVzuExZpV-IKHAOTvylFYk5ICrZIjJFlNrq0zPP3MatpDHYUDnbf_Iv0Mm-I97_Gx-I7-0Ml5m-D0lvCYW"/>
+</div>
+</header>
+<main class="mt-20 px-6 space-y-6">
+<!-- Success Confirmation Section -->
+<section class="flex flex-col items-center justify-center py-8 bg-surface-container-lowest rounded-3xl shadow-sm border border-outline-variant/10 text-center">
+<div class="w-20 h-20 bg-primary-container rounded-full flex items-center justify-center mb-4 text-on-primary-container shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<h1 class="text-3xl font-black text-on-surface tracking-tight mb-2">تم تأكيد الحجز</h1>
+<p class="text-on-surface-variant font-medium text-lg">رقم الحجز: <span class="text-primary font-bold">BK-7742</span></p>
+</section>
+<!-- Live Map Tracking (Simulated) -->
+<section class="relative h-64 w-full rounded-3xl overflow-hidden shadow-sm group">
+<img class="w-full h-full object-cover" data-alt="modern minimalist city map showing navigation routes with elegant gold and charcoal pins in a clean vector style" data-location="Dubai" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAsA1ybiaepuIwRTw19a9FFK-DqWhHbwWOM3U9AiMfdkVgCTnBUm1-iu0-uDFes3E8GKfelzCL7AmkEAaxKjXQNp2SSNoFP2FCvNpiQRYxw8PwOrYgrJmUe8mR9Weqqr7k5ID46-uzBoM4i8ukno9lJzPvm6LBu4K9ETrqnwj6x4NY2WfXUdAgEFWfg90PHRyc2HCKbzTc0BHSF-XN5URlFUnKfuuHcaE3t-2Z_L2L96wgZw0Xwrdvz341wGyjdPIvaH8iDD4FItlXU"/>
+<div class="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent"></div>
+<div class="absolute bottom-4 right-4 bg-surface-container-lowest/90 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2">
+<span class="w-3 h-3 bg-primary rounded-full animate-pulse"></span>
+<span class="text-sm font-bold text-on-surface">السائق يقترب (4 دقائق)</span>
+</div>
+</section>
+<!-- Trip Summary Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Location Details -->
+<div class="bg-surface-container-low p-6 rounded-3xl flex flex-col gap-6 border border-outline-variant/5">
+<div class="flex items-start gap-4">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">location_on</span>
+<div class="w-0.5 h-12 border-l-2 border-dotted border-outline-variant my-1"></div>
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">near_me</span>
+</div>
+<div class="flex flex-col gap-8 flex-1">
+<div>
+<p class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">نقطة الانطلاق</p>
+<p class="text-lg font-bold text-on-surface">مطار الملك خالد الدولي، الرياض</p>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">وجهة الوصول</p>
+<p class="text-lg font-bold text-on-surface">فندق الفورسيزونز، برج المملكة</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Price & Date Summary -->
+<div class="grid grid-cols-1 gap-4">
+<div class="bg-surface-container-lowest p-6 rounded-3xl flex justify-between items-center shadow-sm">
+<div>
+<p class="text-xs text-on-surface-variant font-bold">التاريخ والوقت</p>
+<p class="text-lg font-bold">24 أكتوبر، 10:30 صباحاً</p>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">calendar_today</span>
+</div>
+<div class="bg-primary-container p-6 rounded-3xl flex justify-between items-center shadow-md">
+<div>
+<p class="text-xs text-on-primary-container font-bold">إجمالي التكلفة</p>
+<p class="text-3xl font-black text-on-primary-container">145.00 ر.س</p>
+</div>
+<span class="material-symbols-outlined text-on-primary-container text-4xl">payments</span>
+</div>
+</div>
+</div>
+<!-- Driver Info Card -->
+<section class="bg-surface-container-low p-5 rounded-3xl flex items-center justify-between border border-outline-variant/10">
+<div class="flex items-center gap-4">
+<div class="relative">
+<img class="w-16 h-16 rounded-2xl object-cover" data-alt="headshot of a professional chauffeur wearing a clean uniform, smiling slightly, professional photography lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU_rM1-59cgOPJLwtFZMN91lFQ_C7u8eQDWSK4uMfXIwwc4GXc-L3GfYYaDdLNqSTD4KJBdHY3gHXrt6W1dGkznMk0xNw34yvnXj5I4C4X_guAVNzXUqQZlK9vxFfnTZUN9Mz65mMfK2g2TCV5ERt2ESeCWpTprkMuFcqHbdk1BEPdaMn_xRzCb4lGB7ELzzwt9jp2jL5l1gbSsg4W5FnP7sIyQw_S3F2PndKtXb87CE6KwdQSSjFTcho62kOknQWh82b2WOZTR746"/>
+<div class="absolute -bottom-1 -left-1 bg-primary text-white text-[10px] px-2 py-0.5 rounded-full font-bold">4.9 ★</div>
+</div>
+<div>
+<h3 class="font-bold text-lg">أحمد العتيبي</h3>
+<p class="text-sm text-on-surface-variant">تويوتا كامري 2024 • أ ب ج 1234</p>
+</div>
+</div>
+<div class="flex gap-2">
+<button class="w-12 h-12 rounded-2xl bg-surface-container-highest flex items-center justify-center transition-all active:scale-90 text-on-surface">
+<span class="material-symbols-outlined">call</span>
+</button>
+</div>
+</section>
+</main>
+<!-- Floating Action Button -->
+<div class="fixed bottom-24 left-6 z-40">
+<button class="bg-primary text-white px-6 py-4 rounded-full flex items-center gap-3 shadow-2xl shadow-primary/40 hover:scale-105 active:scale-90 transition-all font-bold text-lg">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+<span>تواصل مع السائق</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-[#1D1B1C]/80 backdrop-blur-xl rounded-t-3xl border-t border-[#d2c5ae]/15 shadow-[0_-4px_20px_rgba(29,27,28,0.04)]">
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Inter'] text-[12px] font-medium">الرئيسية</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#FAC445] text-[#1D1B1C] rounded-2xl px-5 py-2 transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+<span class="font-['Inter'] text-[12px] font-medium">حجوزاتي</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium">المحفظة</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-['Inter'] text-[12px] font-medium">الحساب</span>
+</a>
+</nav>
+</body></html>

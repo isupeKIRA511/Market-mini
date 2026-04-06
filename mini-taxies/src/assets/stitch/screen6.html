@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "inverse-primary": "#f4bf40",
+              "on-secondary-fixed-variant": "#584416",
+              "surface-dim": "#ded9da",
+              "on-background": "#1d1b1c",
+              "on-surface": "#1d1b1c",
+              "on-primary-fixed-variant": "#5b4300",
+              "on-secondary-fixed": "#261a00",
+              "on-primary-container": "#6e5100",
+              "inverse-surface": "#323031",
+              "on-error": "#ffffff",
+              "primary-container": "#fac445",
+              "tertiary-fixed": "#b5ebff",
+              "tertiary-fixed-dim": "#5dd5fa",
+              "outline": "#817662",
+              "tertiary-container": "#64daff",
+              "primary": "#795900",
+              "secondary-fixed": "#fedfa3",
+              "surface-container-low": "#f8f2f3",
+              "on-error-container": "#93000a",
+              "on-secondary": "#ffffff",
+              "on-secondary-container": "#786131",
+              "secondary": "#715b2c",
+              "on-tertiary-container": "#005e73",
+              "surface-container-high": "#ede7e8",
+              "on-tertiary-fixed": "#001f28",
+              "tertiary": "#00677e",
+              "surface-container-lowest": "#ffffff",
+              "background": "#fef8f9",
+              "on-primary-fixed": "#261a00",
+              "surface-container": "#f3eced",
+              "primary-fixed-dim": "#f4bf40",
+              "on-surface-variant": "#4f4635",
+              "surface-container-highest": "#e7e1e2",
+              "surface-tint": "#795900",
+              "surface-bright": "#fef8f9",
+              "on-tertiary": "#ffffff",
+              "outline-variant": "#d2c5ae",
+              "secondary-container": "#fedfa3",
+              "primary-fixed": "#ffdf9f",
+              "secondary-fixed-dim": "#e0c389",
+              "inverse-on-surface": "#f5eff0",
+              "on-tertiary-fixed-variant": "#004e60",
+              "on-primary": "#ffffff",
+              "surface-variant": "#e7e1e2",
+              "error": "#ba1a1a",
+              "error-container": "#ffdad6",
+              "surface": "#fef8f9"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface selection:bg-primary-container">
+<!-- Top AppBar -->
+<header class="bg-[#fef8f9] dark:bg-[#1D1B1C] flex flex-row-reverse justify-between items-center w-full px-6 py-4 fixed top-0 z-50">
+<div class="flex items-center gap-4">
+<div class="h-10 w-10 rounded-full bg-surface-container-highest overflow-hidden border-2 border-primary-container">
+<img alt="صورة الملف الشخصي" class="h-full w-full object-cover" data-alt="professional portrait of a middle eastern man with a neat beard and friendly expression in soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuClWwpl_3KQoEbgHuD2oUZn45_AFSxfvGM1cHO7DLbb7jyXj1S6uFw6wO7tucqNNrBWJ2LRbmwhSI8miUdxx9M_QpzupYBAbvGxlc-d9fJcb867XJ4o7EFMLaBu321_Jb1HKtpR5A89cWAltK7XjT3_fOUpnhyGn4F1xwh4QPL_dI96rwaND5v22ZllQwOdC_aTc6JpOE_VZ2IANxld9wPZaT8Hgyvm5VuHeQaB9aSZIeAJVdjh5PQ9gv4R41iv3ldRFr58PfJMNFT5"/>
+</div>
+<h1 class="font-['Inter'] font-bold text-2xl text-[#1D1B1C] dark:text-white">المحفظة</h1>
+</div>
+<button class="transition-all duration-300 active:scale-95 text-[#795900] dark:text-[#FAC445]">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-md mx-auto space-y-8">
+<!-- Wallet Section: Bento Card -->
+<section class="space-y-4">
+<div class="relative overflow-hidden rounded-[2rem] bg-on-background p-8 text-white shadow-2xl">
+<div class="absolute top-0 left-0 w-32 h-32 bg-primary opacity-20 blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+<div class="relative z-10 space-y-6">
+<div class="flex justify-between items-start">
+<div>
+<p class="text-surface-container-highest/60 text-sm font-medium mb-1">الرصيد المتاح</p>
+<h2 class="text-4xl font-black tracking-tight">25,000 <span class="text-lg font-bold text-primary-container">د.ع</span></h2>
+</div>
+<div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+</div>
+</div>
+<div class="flex gap-3 pt-2">
+<button class="flex-1 bg-primary-container text-on-primary-container py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">
+<span class="material-symbols-outlined">add_circle</span>
+<span>تعبئة الرصيد</span>
+</button>
+<button class="p-4 bg-white/10 backdrop-blur-md text-white rounded-2xl transition-transform active:scale-95">
+<span class="material-symbols-outlined">history</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Transaction History -->
+<section class="space-y-5">
+<div class="flex justify-between items-end px-1">
+<h3 class="text-xl font-extrabold">العمليات الأخيرة</h3>
+<button class="text-primary font-bold text-sm">عرض الكل</button>
+</div>
+<div class="space-y-3">
+<!-- Transaction Item 1 -->
+<div class="bg-surface-container-lowest p-4 rounded-3xl flex items-center justify-between transition-all hover:bg-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-error-container/20 flex items-center justify-center text-error">
+<span class="material-symbols-outlined">local_taxi</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">رحلة إلى مطار بغداد</p>
+<p class="text-xs text-on-surface-variant">أمس، 10:30 م</p>
+</div>
+</div>
+<div class="text-left">
+<p class="font-black text-on-surface">15,000- <span class="text-[10px] opacity-60">د.ع</span></p>
+<span class="text-[10px] px-2 py-0.5 bg-surface-container rounded-full text-on-surface-variant">تم الدفع</span>
+</div>
+</div>
+<!-- Transaction Item 2 -->
+<div class="bg-surface-container-lowest p-4 rounded-3xl flex items-center justify-between transition-all hover:bg-surface-container">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-tertiary-container/20 flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined">account_balance</span>
+</div>
+<div>
+<p class="font-bold text-on-surface">استرجاع مبلغ</p>
+<p class="text-xs text-on-surface-variant">12 أكتوبر، 02:15 م</p>
+</div>
+</div>
+<div class="text-left">
+<p class="font-black text-tertiary">5,000+ <span class="text-[10px] opacity-60">د.ع</span></p>
+<span class="text-[10px] px-2 py-0.5 bg-tertiary-container/20 rounded-full text-tertiary">مكتمل</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Bookings Section -->
+<section class="space-y-5">
+<div class="flex justify-between items-end px-1">
+<h3 class="text-xl font-extrabold">حجوزاتي</h3>
+<div class="flex bg-surface-container-low p-1 rounded-xl gap-1">
+<button class="px-4 py-1.5 bg-white shadow-sm rounded-lg text-xs font-bold text-primary">القادمة</button>
+<button class="px-4 py-1.5 text-xs font-medium text-on-surface-variant">السابقة</button>
+</div>
+</div>
+<!-- Booking Card -->
+<div class="relative bg-surface-container-low rounded-[2rem] p-6 space-y-4 overflow-hidden">
+<div class="absolute top-0 left-0 bg-primary-container px-4 py-1 rounded-bl-2xl text-[10px] font-black text-on-primary-container">مؤكد</div>
+<div class="flex justify-between items-start pt-2">
+<div class="flex gap-4">
+<div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-on-background text-3xl">flight_takeoff</span>
+</div>
+<div>
+<h4 class="font-extrabold text-lg">من: حي المنصور</h4>
+<p class="text-sm text-on-surface-variant">إلى: صالة المغادرة، المطار</p>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4 py-4 border-y border-outline-variant/15">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">calendar_today</span>
+<span class="text-xs font-bold">15 أكتوبر، 2023</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-sm">schedule</span>
+<span class="text-xs font-bold">08:00 صباحاً</span>
+</div>
+</div>
+<div class="flex justify-between items-center">
+<div class="flex -space-x-3 space-x-reverse">
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-white flex items-center justify-center">
+<span class="material-symbols-outlined text-xs">person</span>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface-container-low bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-xs" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+</div>
+</div>
+<button class="text-primary text-sm font-bold flex items-center gap-1">
+                        تفاصيل الرحلة
+                        <span class="material-symbols-outlined text-sm">chevron_left</span>
+</button>
+</div>
+</div>
+<!-- Pending Booking Card -->
+<div class="bg-surface-container-lowest border border-outline-variant/10 rounded-[2rem] p-6 space-y-4">
+<div class="flex justify-between items-start">
+<div class="flex gap-4">
+<div class="w-14 h-14 bg-surface-container rounded-2xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">flight_land</span>
+</div>
+<div>
+<h4 class="font-extrabold text-lg">من: مطار بغداد الدولي</h4>
+<p class="text-sm text-on-surface-variant">إلى: فندق بابل، الجادرية</p>
+</div>
+</div>
+<div class="bg-surface-container px-3 py-1 rounded-full text-[10px] font-bold text-on-surface-variant">تم الإرسال</div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<p class="text-xs font-medium text-on-surface-variant">في انتظار موافقة السائق...</p>
+<button class="bg-error/10 text-error px-4 py-2 rounded-xl text-xs font-bold transition-colors active:bg-error active:text-white">إلغاء</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex flex-row-reverse justify-around items-center px-4 pb-6 pt-3 bg-white/80 dark:bg-[#1D1B1C]/80 backdrop-blur-xl rounded-t-3xl shadow-[0_-4px_20px_rgba(29,27,28,0.04)] border-t border-[#d2c5ae]/15">
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined mb-1">home</span>
+<span class="font-['Inter'] text-[12px] font-medium">الرئيسية</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined mb-1">directions_car</span>
+<span class="font-['Inter'] text-[12px] font-medium">حجوزاتي</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-[#FAC445] text-[#1D1B1C] rounded-2xl px-5 py-2 transition-transform duration-200 active:scale-90" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-['Inter'] text-[12px] font-medium">المحفظة</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4f4635] dark:text-[#d2c5ae] px-5 py-2 transition-transform duration-200 active:scale-90 hover:text-[#795900] dark:hover:text-[#FAC445]" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-['Inter'] text-[12px] font-medium">الحساب</span>
+</a>
+</nav>
+</body></html>
