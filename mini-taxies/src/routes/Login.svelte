@@ -2,97 +2,91 @@
   import { goto } from '../lib/navigation/goto';
   import { setAuthData } from '../lib/stores/authStore';
   import { skipAuth } from '../lib/config/features';
-  import type { AuthResponse, StandardApiResponse } from '../lib/types/api';
+  import type { AuthResponse, ApiGetOneResponse, ApiStatusResponse } from '../lib/types/api';
+  import { apiClient } from '../lib/api/client';
 
   let phoneNumber = '';
-  let password = '';
-  let showPassword = false;
+  let otp = '';
   let loading = false;
   let errorMsg = '';
+  let otpRequested = false;
 
   function normalizePhone(raw: string): string {
-    return raw.replace(/\s+/g, '').trim();
-  }
-
-  function parseLoginResult(body: unknown): AuthResponse | null {
-    if (!body || typeof body !== 'object') return null;
-    const o = body as Record<string, unknown>;
-    if (o.success === true && o.data && typeof o.data === 'object') {
-      const d = o.data as Partial<AuthResponse>;
-      if (typeof d.token === 'string' && d.id != null) {
-        return {
-          token: d.token,
-          id: String(d.id),
-          phoneNumber: typeof d.phoneNumber === 'string' ? d.phoneNumber : '',
-        };
-      }
-      return null;
+    const s = raw.replace(/\s+/g, '').trim();
+    if (!s) return s;
+    // If user entered local number starting with 0 (e.g., 07721380351), convert to +964...
+    if (/^0\d+/.test(s)) {
+      return s.replace(/^0/, '+964');
     }
-    if (typeof o.token === 'string' && o.id != null) {
-      return {
-        token: o.token,
-        id: String(o.id),
-        phoneNumber: typeof o.phoneNumber === 'string' ? o.phoneNumber : '',
-      };
+    // Support numbers like 009647801234567 -> +9647801234567
+    if (/^00\d+/.test(s)) {
+      return s.replace(/^00/, '+');
     }
-    return null;
-  }
-
-  function messageFromBody(body: unknown): string {
-    if (!body || typeof body !== 'object') return '';
-    const std = body as StandardApiResponse<AuthResponse>;
-    if (std.message) return std.message;
-    if (Array.isArray(std.errors) && std.errors.length) return std.errors.join(' ');
-    return '';
+    // If starts with country code without + (e.g., 964...), add +
+    if (/^964\d+/.test(s)) {
+      return '+' + s;
+    }
+    // otherwise return as-is (allow user-supplied +964...)
+    return s;
   }
 
   $: normalizedPhone = normalizePhone(phoneNumber);
 
-  async function handleLogin() {
+  async function handleRequestOtp() {
     if (loading) return;
     errorMsg = '';
 
-    if (!normalizedPhone || !password) {
-      errorMsg = 'يرجى إدخال رقم الجوال وكلمة المرور';
+    if (!normalizedPhone) {
+      errorMsg = 'يرجى إدخال رقم الجوال';
       return;
     }
 
     loading = true;
     try {
-      // الربط المباشر وي سيرفر الدوت نت بدون ما أعدل منطقك المعقد
-      const res = await fetch('http://localhost:5000/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: normalizedPhone, password })
+      await apiClient.post('/auth/customer/request-otp', { phoneNumber: normalizedPhone });
+      otpRequested = true;
+    } catch (err: any) {
+      errorMsg = err.message || 'تعذّر إرسال رمز التحقق';
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function handleVerifyOtp() {
+    if (loading) return;
+    errorMsg = '';
+
+    if (!otp) {
+      errorMsg = 'يرجى إدخال رمز التحقق';
+      return;
+    }
+
+    loading = true;
+    try {
+      const res = await apiClient.post<AuthResponse>('/auth/customer/verify-otp', {
+        phoneNumber: normalizedPhone,
+        otp
       });
       
-      const raw = await res.json();
-      
-      const auth = parseLoginResult(raw);
-      if (auth) {
+      const auth = res.data;
+      if (auth && auth.token && auth.id) {
         setAuthData(auth);
-        if ((typeof localStorage !== 'undefined')) {
-          localStorage.setItem('token', auth.token);
-        }
         goto('home');
       } else {
-        errorMsg = messageFromBody(raw) || 'تعذّر تسجيل الدخول أو البيانات غير صحيحة';
+        errorMsg = 'رمز التحقق غير صحيح استجاب الخادم بمعلومات غير صالحة';
       }
-    } catch (err: unknown) {
-      const e = err as { response?: { data?: { message?: string; errors?: string[] } }; message?: string };
-      const msg =
-        e.response?.data?.message ||
-        (Array.isArray(e.response?.data?.errors) ? e.response?.data?.errors.join(' ') : '') ||
-        e.message ||
-        'خطأ في الاتصال بالخادم. تحقق من تشغيل سيرفر الدوت نت.';
-      errorMsg = msg;
+    } catch (err: any) {
+      errorMsg = err.message || 'رمز التحقق غير صحيح';
     } finally {
       loading = false;
     }
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Enter') handleLogin();
+    if (e.key === 'Enter') {
+        if (!otpRequested) handleRequestOtp();
+        else handleVerifyOtp();
+    }
   }
 </script>
 
@@ -102,9 +96,7 @@
       class="mb-4 rounded-2xl border border-tertiary/30 bg-tertiary/10 px-3 py-2.5 text-right text-[10px] font-bold text-on-surface leading-relaxed"
       role="status"
     >
-      وضع التطوير: <code class="font-mono opacity-80">VITE_SKIP_AUTH=true</code> — التطبيق لا يُجبر على هذه الشاشة؛ يمكنك ربط
-      المسارات تحت <code class="font-mono opacity-80">/marketplace/api/v1</code> و<code class="font-mono opacity-80">/Auth/</code> عبر
-      <code class="font-mono opacity-80">src/lib/api</code>.
+      وضع التطوير: <code class="font-mono opacity-80">VITE_SKIP_AUTH=true</code>
     </div>
   {/if}
   <div class="text-center mb-8">
@@ -113,7 +105,7 @@
     >
       <span class="material-symbols-outlined text-[32px] text-primary font-bold">directions_car</span>
     </div>
-    <h1 class="text-[26px] font-black text-on-surface tracking-tight mb-1">TransPay</h1>
+    <h1 class="text-[26px] font-black text-on-surface tracking-tight mb-1">Teleport.iq</h1>
     <p class="text-on-surface-variant text-[11px] font-bold">تسجيل دخول العملاء</p>
   </div>
 
@@ -131,8 +123,7 @@
 
     <div class="space-y-1.5">
       <label for="login-phone" class="block text-right text-[10px] font-black text-on-surface-variant uppercase tracking-wide"
-        >رقم الجوال</label
-      >
+        >رقم الجوال</label>
       <div class="relative flex flex-row-reverse items-center">
         <span
           class="material-symbols-outlined absolute left-3 text-on-surface-variant/70 pointer-events-none text-[20px]"
@@ -145,49 +136,52 @@
           autocomplete="username"
           bind:value={phoneNumber}
           on:keydown={onKeydown}
-          placeholder="مثال: 0790000000"
-          class="w-full rounded-2xl bg-surface-container py-3.5 pl-11 pr-4 text-right text-[14px] font-semibold text-on-surface placeholder:text-on-surface-variant/45 border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-shadow"
+          disabled={otpRequested}
+          placeholder="مثال: +9647801234567"
+          class="w-full rounded-2xl bg-surface-container py-3.5 pl-11 pr-4 text-right text-[14px] font-semibold text-on-surface placeholder:text-on-surface-variant/45 border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-shadow {otpRequested ? 'opacity-60 cursor-not-allowed' : ''}"
         />
       </div>
     </div>
 
-    <div class="space-y-1.5">
-      <label for="login-pass" class="block text-right text-[10px] font-black text-on-surface-variant uppercase tracking-wide"
-        >كلمة المرور</label
-      >
-      <div class="relative flex flex-row-reverse items-center">
-        <button
-          type="button"
-          class="absolute left-2 w-9 h-9 rounded-xl flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high transition-colors"
-          on:click={() => (showPassword = !showPassword)}
-          aria-label={showPassword ? 'إخفاء كلمة المرور' : 'إظهار كلمة المرور'}
-        >
-          <span class="material-symbols-outlined text-[20px]">{showPassword ? 'visibility_off' : 'visibility'}</span>
+    {#if otpRequested}
+    <div class="space-y-1.5 animate-fade-in">
+      <div class="flex justify-between items-center">
+        <button type="button" class="text-[10px] font-bold text-primary" on:click={() => { otpRequested = false; otp = ''; }}>
+            تعديل الرقم
         </button>
+        <label for="login-otp" class="block text-right text-[10px] font-black text-on-surface-variant uppercase tracking-wide"
+          >رمز التحقق (OTP)</label>
+      </div>
+      <div class="relative flex flex-row-reverse items-center">
+        <span
+          class="material-symbols-outlined absolute left-3 text-on-surface-variant/70 pointer-events-none text-[20px]"
+          >dialpad</span
+        >
         <input
-          id="login-pass"
-          type={showPassword ? 'text' : 'password'}
-          autocomplete="current-password"
-          bind:value={password}
+          id="login-otp"
+          type="text"
+          inputmode="numeric"
+          bind:value={otp}
           on:keydown={onKeydown}
-          placeholder="••••••••"
-          class="w-full rounded-2xl bg-surface-container py-3.5 pl-12 pr-4 text-right text-[14px] font-semibold text-on-surface placeholder:text-on-surface-variant/45 border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-shadow"
+          placeholder="أدخل الرمز المكون من 6 أرقام"
+          class="w-full rounded-2xl bg-surface-container py-3.5 pl-11 pr-4 text-right text-[14px] font-semibold text-on-surface placeholder:text-on-surface-variant/45 border border-outline-variant/20 focus:border-primary focus:ring-2 focus:ring-primary/25 outline-none transition-shadow tracking-widest"
         />
       </div>
     </div>
+    {/if}
 
     <button
       type="button"
       class="w-full btn-premium h-14 rounded-2xl text-[15px] disabled:opacity-60 disabled:scale-100 disabled:pointer-events-none"
       disabled={loading}
-      on:click={handleLogin}
+      on:click={otpRequested ? handleVerifyOtp : handleRequestOtp}
     >
       {#if loading}
         <span class="material-symbols-outlined text-[22px] animate-spin" style="font-variation-settings: 'FILL' 0;">progress_activity</span>
         <span>جاري التحقق…</span>
       {:else}
         <span class="material-symbols-outlined text-[22px]">login</span>
-        <span>تسجيل الدخول</span>
+        <span>{otpRequested ? 'تأكيد الرمز' : 'إرسال الرمز'}</span>
       {/if}
     </button>
   </div>
