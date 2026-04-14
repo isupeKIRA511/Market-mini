@@ -12,22 +12,7 @@
   let otpRequested = false;
 
   function normalizePhone(raw: string): string {
-    const s = raw.replace(/\s+/g, '').trim();
-    if (!s) return s;
-    // If user entered local number starting with 0 (e.g., 07721380351), convert to +964...
-    if (/^0\d+/.test(s)) {
-      return s.replace(/^0/, '+964');
-    }
-    // Support numbers like 009647801234567 -> +9647801234567
-    if (/^00\d+/.test(s)) {
-      return s.replace(/^00/, '+');
-    }
-    // If starts with country code without + (e.g., 964...), add +
-    if (/^964\d+/.test(s)) {
-      return '+' + s;
-    }
-    // otherwise return as-is (allow user-supplied +964...)
-    return s;
+    return raw.replace(/\s+/g, '').trim();
   }
 
   $: normalizedPhone = normalizePhone(phoneNumber);
@@ -187,6 +172,13 @@
   </div>
 
   <p class="text-center text-[10px] text-on-surface-variant/80 font-bold mt-6 px-2 leading-relaxed">
+    ليس لديك حساب؟
+    <button type="button" class="text-primary font-black hover:underline" on:click={() => goto('register')}>
+      إنشاء حساب جديد
+    </button>
+  </p>
+
+  <p class="text-center text-[10px] text-on-surface-variant/80 font-bold mt-4 px-2 leading-relaxed">
     بيانات الدخول تُرسل بشكل آمن إلى خادم التطبيق وفق واجهة العميل المعتمدة.
   </p>
 </div>

@@ -1,78 +1,77 @@
-export interface RegisterRequest {
-    phoneNumber: string;
-    fullName: string;
-    password: string;
-}
-
-export interface LoginRequest {
-    phoneNumber: string;
-    password: string;
-}
-
 export interface AuthResponse {
-    id: string; // Guid
+    id: string; // Your customer UUID — needed for credit card ownerId
     phoneNumber: string;
-    token: string;
+    token: string;        // JWT bearer token
 }
 
-export interface UserRecord {
-    id: string; // Guid
-    role: string;
+export interface ApiGetOneResponse<T> {
+    success: boolean;
+    data: T;
+    message: string;
 }
 
-export interface Car {
-    model: string;
-    brand: string;
-    licensePlate: string;
+export interface ApiGetManyResponse<T> {
+    success: boolean;
+    pageNum: number;
+    pageSize: number;
+    totalCount: number;
+    data: T[];
+    message: string;
 }
 
-export interface CarModel extends Car {
-    ownerId: string; // Guid
-    id: string; // Guid
-    comfortScore: number;
-    createdAt: string; // DateTime
-    deletedAt?: string; // DateTime?
-}
-
-export interface UpdateCarOwnerRequest {
-    newOwnerId: string; // Guid
-}
-
-export interface UpdateComfortScoreRequest {
-    comfortScore: number;
-}
-
-export interface CompanyModel {
-    id: string; // Guid
-    name: string;
-    status: boolean;
-    reputationScore: number;
-    createdAt: string; // DateTime
-    deletedAt: string; // DateTime
-}
-
-export interface NewRideRequest {
-    id: string; // Guid
-    driverName: string; // Guid (from spec)
-    driverId: string; // Guid
-    carLicensePlate: string; // Guid (from spec)
-    price: number;
-    distance: number;
-    latitude: number;
-    longitude: number;
-    status: string;
+export interface ApiStatusResponse {
+    success: boolean;
+    code: number;
+    message: string;
 }
 
 export interface CustomerModel {
-    id: string; // Guid
+    id: string;           // Guid
     fullName: string;
     phoneNumber: string;
-    passwordHash: string;
+    createdAt: string;    // ISO 8601
+    updatedAt: string;
+    deletedAt: string | null;
 }
 
-export interface StandardApiResponse<T> {
-    success: boolean;
-    data: T;
-    message?: string;
-    errors?: string[];
+export interface CreditCardModel {
+    id: string;
+    owner_Id: string;
+    cardNumber: string;
+    cardHolderName: string;
+    cve: number;
+    expiration: number;   // MMYY integer, e.g. 1229 = Dec 2029
+    createdAt: string;
+    deletedAt: string | null;
+}
+
+export interface RideOffersSearchFields {
+    price: number;
+    pickupProvince: string;
+    dropoffProvince: string;
+    destinationLatitude: number;
+    destinationLongitude: number;
+    maxPassengers: number;
+    companyName: string;
+    driverName: string;
+    carBrand: string;
+    carModel: string;
+    rideOfferId?: string; // Optional field if we manage to attach it or need it later
+}
+
+export interface RideModel {
+    id: string;
+    status: string;
+    price: number;
+    passengerName: string;
+    driverName: string;
+    driverPhoneNumber: string;
+    rideOfferId: string;
+    companyId: string;
+    passengerId: string;
+    driverId: string;
+    pickupProvince: string;
+    dropoffProvince: string;
+    destinationLatitude: number;
+    destinationLongitude: number;
 }

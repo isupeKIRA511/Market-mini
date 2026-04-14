@@ -1,5 +1,6 @@
 <script lang="ts">
     import { currentRoute } from '../lib/stores/navigationStore';
+    import { bookingStore } from '../lib/stores/bookingStore';
     import FilterAndSort from '../lib/components/FilterAndSort.svelte';
     import { searchQuery, carType, passengersFilter, luggageFilter, sortBy } from '../lib/stores/filterStore';
     import { onMount } from 'svelte';
@@ -61,6 +62,10 @@
         }, 10);
     }
 
+    $: if (fromGov && toGov && seatCountInt) {
+        searchOffers();
+    }
+
     let fromGov = '';
     let toGov = '';
     const governorates = [
@@ -69,38 +74,60 @@
         'صلاح الدين', 'دهوك', 'السليمانية', 'بابل', 'كربلاء'
     ];
 
-    let listLoading = true;
+    let listLoading = false;
     let listError = '';
+    // Map API returned matches to DriverCardUi representation
     let sourceDrivers: DriverCardUi[] = [];
+
+    // Optional: promo loaded flags from your UI
     let promoTitle = '';
     let promoSubtitle = '';
     let promoCode = 'AIRPORT20';
     let promoLoaded = false;
 
-    async function loadMarketplaceData() {
+    // Convert seats to number from the text filter
+    $: seatCountInt = parseInt($passengersFilter) || 1;
+
+    async function searchOffers() {
+        if (!fromGov || !toGov) {
+            alert('يرجى تحديد مكان الانطلاق والوجهة أولاً');
+            return;
+        }
+
         listLoading = true;
         listError = '';
         try {
-            const [carsRaw, bannersRaw] = await Promise.all([
-                getData('/api/cars'),
-                getData('/api/banners').catch(() => null),
-            ]);
-            
-            sourceDrivers = carsRaw || [];
-            
-            const banners = bannersRaw || [];
-            const first = banners[0];
-            if (first) {
-                promoTitle = String(first.title ?? first.Title ?? first.name ?? first.Name ?? '');
-                promoSubtitle = String(
-                    first.description ?? first.Description ?? first.subtitle ?? first.Subtitle ?? ''
-                );
-                const code = first.code ?? first.Code ?? first.promoCode ?? first.PromoCode;
-                if (code != null && String(code).trim()) promoCode = String(code).trim();
-                promoLoaded = !!(promoTitle || promoSubtitle);
+            const params = new URLSearchParams({
+                pickupProvince: fromGov,
+                dropoffProvince: toGov,
+                seatCount: seatCountInt.toString(),
+                pageNum: '1',
+                pageSize: '20'
+            });
+
+            // Make the GET request to the real API
+            const response = await fetch(`https://aqaariq.com/marketplace/api/v1/rideoffers/Search?${params.toString()}`);
+            if (!response.ok) {
+                throw new Error('فشل جلب أحدث الرحلات المتاحة');
             }
-        } catch (e) {
-            listError = e instanceof Error ? e.message : 'تعذّر تحميل المركبات';
+            
+            const resultRaw = await response.json();
+            const offersList = resultRaw.data || [];
+
+            // Map standard API response (RideOffersSearchFields) to the component's internal DriverCardUi structure
+            sourceDrivers = offersList.map((apiOffer: any, index: number) => ({
+                id: apiOffer.rideOfferId || `offer-${index}`,
+                name: apiOffer.companyName || 'شركة توصيل',
+                driverName: apiOffer.driverName,
+                car: `${apiOffer.carBrand} ${apiOffer.carModel}`,
+                rating: 5.0, // defaults
+                type: index === 0 ? 'featured' : 'small', // just for UI variance
+                icon: 'directions_car',
+                price: `${apiOffer.price} د.ع`,
+                rawPrice: apiOffer.price
+            }));
+        } catch (e: any) {
+            listError = e.message || 'تعذّر تحميل أحدث الرحلات المتاحة';
             sourceDrivers = [];
         } finally {
             listLoading = false;
@@ -108,28 +135,21 @@
     }
 
     onMount(() => {
-        loadMarketplaceData();
+        // Only load promo since search now requires province selection
+        // Promos placeholder
+        promoTitle = 'خصم خاص 20%';
+        promoLoaded = true;
     });
 
-    $: filtered = sourceDrivers.filter(c => {
-        const matchSearch = $searchQuery === '' || c.name.includes($searchQuery) || c.car.includes($searchQuery);
-        const matchCar = $carType === 'الكل' || c.carTypes.includes($carType);
-        const matchPass = $passengersFilter === 'الكل' || $passengersFilter === '' || c.passengers.includes($passengersFilter);
-        const matchLuggage = $luggageFilter === 'الكل' || $luggageFilter === '' || c.luggage.includes($luggageFilter);
-        return matchSearch && matchCar && matchPass && matchLuggage;
-    });
+    $: filteredAndSorted = sourceDrivers; // The API does the filtering. We can still apply some sorting if needed.
 
-    $: filteredAndSorted = [...filtered].sort((a, b) => {
-        if ($sortBy === 'الأعلى تقييماً') return b.rating - a.rating;
-        if ($sortBy === 'الأكثر تفاعلاً') return b.interactions - a.interactions;
-        if ($sortBy === 'ذوي الاحتياجات الخاصة (همم)') return (b.hasHemam ? 1 : 0) - (a.hasHemam ? 1 : 0);
-        return 0;
-    });
-
-    function handleBookAction(route: any) {
+    function handleBookAction(route: any, offerId?: string) {
         if (!fromGov || !toGov) {
             alert('يرجى اختيار المحافظة (مكان الانطلاق والوجهة) للمتابعة.');
             return;
+        }
+        if (offerId) {
+            bookingStore.update((b: any) => ({ ...b, rideOfferId: String(offerId) }));
         }
         currentRoute.set(route);
     }
@@ -238,7 +258,7 @@
                         </div>
 
                         <div class="flex gap-2 w-full">
-                            <button on:click={() => handleBookAction('select-car')} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">احجز الآن</button>
+                            <button on:click={() => handleBookAction('select-car', String(driver.id))} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">احجز الآن</button>
                             <button class="flex-1 bg-primary/10 text-primary border border-primary/20 px-4 py-3 text-sm rounded-xl font-bold transition-all hover:bg-primary hover:text-white">التفاصيل</button>
                         </div>
                     </div>
@@ -270,7 +290,7 @@
                 </div>
 
             {:else if driver.type === 'simple'}
-                <button on:click={() => handleBookAction('select-car')} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">
+                <button on:click={() => handleBookAction('select-car', String(driver.id))} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">
                     <div class="w-16 h-16 shrink-0 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center">
                         <span class="material-symbols-outlined text-primary text-2xl">{driver.icon}</span>
                     </div>

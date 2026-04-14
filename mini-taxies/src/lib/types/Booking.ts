@@ -6,4 +6,10 @@ export interface BookingDetails {
     carModel: string;
     passengersCount: number;
     luggageCount: number;
+    rideOfferId?: string;
+    carType?: string;
+    bookingId?: string;
+    airport?: string;
+    dropoffLocation?: string;
+    price?: number;
 }

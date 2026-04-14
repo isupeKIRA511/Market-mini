@@ -19,22 +19,14 @@
 
   onMount(() => {
     (async () => {
-      if ($bookingStore.bookingId) {
-          try {
-              const data = await getData(`/api/bookings/${$bookingStore.bookingId}/driver`);
-              driverInfo = data;
-          } catch (error) {
-              driverInfo = { name: 'أحمد العتيبي', car: 'تويوتا كامري 2024', plate: 'أ ب ج 1234', rating: '4.9' };
-          }
-      }
-
+      // 1. Initial Map Setup
       const L = (await import('leaflet'));
       await import('leaflet/dist/leaflet.css');
 
       let userLat = 33.3130;
       let userLng = 44.3410;
       
-      if ($bookingStore.pickupLocation) {
+      if ($bookingStore.pickupLocation && $bookingStore.pickupLocation.includes(',')) {
           const coords = $bookingStore.pickupLocation.split(',');
           userLat = parseFloat(coords[0]);
           userLng = parseFloat(coords[1]);
@@ -43,11 +35,9 @@
       map = L.map(mapContainer, { 
           zoomControl: false, 
           attributionControl: false 
-      }).setView([userLat, userLng], 12);
+      }).setView([userLat, userLng], 14);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 19,
-      }).addTo(map);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
       const taxiIcon = L.icon({
           iconUrl: 'https://cdn-icons-png.flaticon.com/512/3204/3204369.png',
@@ -61,25 +51,51 @@
           iconAnchor: [15, 30]
       });
 
-      const driverMarker = L.marker([userLat - 0.05, userLng - 0.1], { icon: taxiIcon }).addTo(map);
       const userMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+      let driverMarker: any = null;
 
-      let lat = userLat - 0.05;
-      let lng = userLng - 0.1;
-      
-      interval = setInterval(() => {
-          lat += 0.005;
-          lng += 0.01;
-          driverMarker.setLatLng([lat, lng]);
-          
-          if (lat >= userLat - 0.005) {
-              driverDistanceStr = 'وصل السائق!';
-              clearInterval(interval);
+      // 2. Start Polling for Status
+      const rideId = $bookingStore.bookingId;
+      if (!rideId) return;
+
+      const fetchStatus = async () => {
+          try {
+              // Note: Using apiClient for intercepted requests
+              const { apiClient } = await import('../lib/api/client');
+              const res = await apiClient.get<any>(`/rides/${rideId}`);
+              const ride = res.data.data;
+
+              if (ride) {
+                  // Update UI status
+                  driverInfo = {
+                      name: ride.driverName || 'جاري البحث...',
+                      car: `${ride.carBrand} ${ride.carModel}` || '...',
+                      plate: ride.carPlateNumber || '...',
+                      rating: '5.0'
+                  };
+
+                  driverDistanceStr = ride.status; // Can map this to readable Arabic
+
+                  // Update Driver Location if available
+                  if (ride.driverLat && ride.driverLng) {
+                      if (!driverMarker) {
+                          driverMarker = L.marker([ride.driverLat, ride.driverLng], { icon: taxiIcon }).addTo(map);
+                      } else {
+                          driverMarker.setLatLng([ride.driverLat, ride.driverLng]);
+                      }
+                      
+                      // Auto-fit if both markers exist
+                      const bounds = L.latLngBounds([driverMarker.getLatLng(), userMarker.getLatLng()]);
+                      map.fitBounds(bounds, { padding: [50, 50] });
+                  }
+              }
+          } catch (e) {
+              console.error("Polling error:", e);
           }
-      }, 2000);
+      };
 
-      const bounds = L.latLngBounds([driverMarker.getLatLng(), userMarker.getLatLng()]);
-      map.fitBounds(bounds, { padding: [40, 40] });
+      fetchStatus();
+      interval = setInterval(fetchStatus, 5000);
     })();
   });
 

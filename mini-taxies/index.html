@@ -72,6 +72,13 @@
                         version: '1.0.0'
                     });
                 }
+            },
+            getSystemInfoSync: () => {
+                return {
+                    platform: 'browser',
+                    app: 'TransPay',
+                    version: '1.0.0'
+                };
             }
         };
         // Ensure 'my' is also available as a plain global variable
