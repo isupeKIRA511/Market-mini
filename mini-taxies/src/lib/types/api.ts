@@ -1,3 +1,8 @@
+export interface LoginRequest {
+    phoneNumber: string;
+    otp?: string;
+}
+
 export interface AuthResponse {
     id: string; // Your customer UUID — needed for credit card ownerId
     phoneNumber: string;
@@ -74,4 +79,13 @@ export interface RideModel {
     dropoffProvince: string;
     destinationLatitude: number;
     destinationLongitude: number;
+    /** حقول إضافية قد تعيدها الـ API (Swagger: carLicensePlate) */
+    carBrand?: string | null;
+    carModel?: string | null;
+    carLicensePlate?: string | null;
+    carPlateNumber?: string | null;
+    driverLat?: number | null;
+    driverLng?: number | null;
+    driverLatitude?: number | null;
+    driverLongitude?: number | null;
 }

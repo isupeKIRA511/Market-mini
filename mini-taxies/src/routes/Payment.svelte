@@ -1,13 +1,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { currentRoute } from '../lib/stores/navigationStore';
-  import { serverToken, userId } from '../lib/stores/authStore';
+  import { userId } from '../lib/stores/authStore';
   import { get } from 'svelte/store';
   import { bookingStore } from '../lib/stores/bookingStore';
   import { apiClient } from '../lib/api/client';
+  import { isRideOfferGuid } from '../lib/api/rideOfferGuid';
+  import { resolveRideOfferIdFromSearch } from '../lib/api/resolveRideOfferId';
   import type { CreditCardModel, RideModel, ApiGetManyResponse } from '../lib/types/api';
 
-  let selectedMethod = 'card';
+  let selectedMethod: 'card' | 'cash' = 'cash';
   let loading = false;
   
   let cards: CreditCardModel[] = [];
@@ -23,12 +25,22 @@
   let errorMsg = '';
 
   onMount(async () => {
+    const ownerId = get(userId);
+    if (!ownerId) {
+      cards = [];
+      selectedMethod = 'cash';
+      return;
+    }
     try {
-      const res = await apiClient.get<ApiGetManyResponse<CreditCardModel>>('/creditcards?pageNum=1&pageSize=20');
+      const res = await apiClient.get<ApiGetManyResponse<CreditCardModel>>('/CreditCard?PageNum=1&PageSize=20');
       cards = res.data.data || [];
-      if (cards.length > 0) selectedCardId = cards[0].id;
+      if (cards.length > 0) {
+        selectedCardId = cards[0].id;
+        selectedMethod = 'card';
+      }
     } catch {
       cards = [];
+      selectedMethod = 'cash';
     }
   });
 
@@ -36,8 +48,11 @@
       addingCard = true;
       errorMsg = '';
       try {
-          // Add credit card using the specific API
           const ownerId = get(userId);
+          if (!ownerId) {
+              errorMsg = 'يجب تسجيل الدخول أولاً لإضافة بطاقة';
+              return;
+          }
           const expInt = parseInt(newCardExp, 10);
           const payload = {
               cardNumber: newCardNumber,
@@ -45,12 +60,17 @@
               cve: parseInt(newCardCve, 10),
               expiration: expInt
           };
-          const res = await apiClient.post<any>(`/creditcards?ownerId=${ownerId}`, payload);
+          const res = await apiClient.post<any>(`/CreditCard?ownerId=${ownerId}`, payload);
           if (res.data.success) {
               const newCard = res.data.data;
               cards = [newCard, ...cards];
               selectedCardId = newCard.id;
+              selectedMethod = 'card';
               showAddCard = false;
+              newCardNumber = '';
+              newCardName = '';
+              newCardCve = '';
+              newCardExp = '';
           } else {
               errorMsg = res.data.message || 'Error occurred';
           }
@@ -64,16 +84,45 @@
   async function handleCompleteSelection() {
     loading = true;
     errorMsg = '';
-    const bookingData = get(bookingStore);
+    let bookingData = get(bookingStore);
+
+    if (!bookingData.rideOfferId && bookingData.pickupProvince && bookingData.dropoffProvince) {
+        const seats = bookingData.searchSeatCount ?? bookingData.passengersCount ?? 1;
+        try {
+            const resolved = await resolveRideOfferIdFromSearch(
+                bookingData.pickupProvince,
+                bookingData.dropoffProvince,
+                seats,
+            );
+            if (resolved) {
+                bookingStore.update((b) => ({ ...b, rideOfferId: resolved }));
+                bookingData = get(bookingStore);
+            }
+        } catch (e) {
+            console.warn('تعذّر إعادة جلب rideOfferId:', e);
+        }
+    }
+
     if (!bookingData.rideOfferId) {
-        errorMsg = 'لا يوجد عرض حجز محدد';
+        errorMsg =
+            'لا يوجد معرّف عرض (rideOfferId). إن كنت من «بين المحافظات» ارجع للسوق واضغط احجز من جديد، أو يجب أن يُرجع السيرفر rideOfferId في RideOffer/Search.';
+        loading = false;
+        return;
+    }
+    if (!isRideOfferGuid(bookingData.rideOfferId)) {
+        errorMsg = 'معرّف عرض الرحلة غير صالح (rideOfferId). يرجى العودة واختيار رحلة متاحة.';
+        loading = false;
+        return;
+    }
+    if (selectedMethod === 'card' && !selectedCardId) {
+        errorMsg = 'يرجى اختيار بطاقة أو استخدام الدفع المباشر';
         loading = false;
         return;
     }
 
     try {
         // Request the ride
-        const response = await apiClient.post<any>('/rides', {
+        const response = await apiClient.post<any>('/Ride', {
             rideOfferId: bookingData.rideOfferId
         });
         
@@ -135,8 +184,29 @@
     </section>
 
     <section class="w-full">
-         <h2 class="text-lg font-bold mb-4 text-right px-1">البطاقات الائتمانية</h2>
+         <h2 class="text-lg font-bold mb-4 text-right px-1">طريقة الدفع</h2>
          <div class="grid grid-cols-1 gap-3 mb-4">
+             <button on:click={() => selectedMethod = 'cash'} class="relative w-full text-right overflow-hidden {selectedMethod === 'cash' ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
+                 <div class="flex flex-row-reverse items-center justify-between">
+                     <div class="flex flex-row-reverse items-center gap-4">
+                         <div class="w-10 h-10 bg-surface-container-highest rounded-xl flex items-center justify-center shrink-0">
+                              <span class="material-symbols-outlined text-on-surface-variant font-black" style="font-variation-settings: 'FILL' 1;">payments</span>
+                         </div>
+                         <div>
+                             <h3 class="text-sm font-bold text-on-surface mb-0.5">دفع مباشر</h3>
+                             <p class="text-[10px] font-bold text-on-surface-variant">ادفع مباشرة عند الرحلة مع السائق</p>
+                         </div>
+                     </div>
+                     {#if selectedMethod === 'cash'}
+                         <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
+                              <span class="material-symbols-outlined text-[14px] text-on-primary" style="font-variation-settings: 'FILL' 1;">check</span>
+                         </div>
+                     {:else}
+                         <div class="w-6 h-6 rounded-full border-2 border-outline-variant shrink-0"></div>
+                     {/if}
+                 </div>
+             </button>
+
              {#each cards as card}
              <button on:click={() => { selectedCardId = card.id; selectedMethod = 'card'; }} class="relative w-full text-right overflow-hidden {selectedCardId === card.id ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
                  <div class="flex flex-row-reverse items-center justify-between">
@@ -167,6 +237,9 @@
                  </div>
              </button>
          </div>
+         {#if cards.length === 0}
+            <p class="text-[11px] text-on-surface-variant text-right px-1">لا توجد بطاقات محفوظة حالياً. يمكنك المتابعة بالدفع المباشر أو إضافة بطاقة جديدة.</p>
+         {/if}
     </section>
 
     {#if showAddCard}
@@ -205,7 +278,7 @@
             {#if loading}
                 <span class="material-symbols-outlined animate-spin text-[24px]">autorenew</span>
             {:else}
-                <span>تأكيد החجز</span>
+                <span>{selectedMethod === 'cash' ? 'تأكيد الحجز بالدفع المباشر' : 'تأكيد الحجز'}</span>
                 <span class="material-symbols-outlined text-xl">arrow_back</span>
             {/if}
         </button>

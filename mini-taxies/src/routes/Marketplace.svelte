@@ -1,12 +1,15 @@
 <script lang="ts">
     import { currentRoute } from '../lib/stores/navigationStore';
+    import type { Route } from '../lib/stores/navigationStore';
     import { bookingStore } from '../lib/stores/bookingStore';
     import FilterAndSort from '../lib/components/FilterAndSort.svelte';
-    import { searchQuery, carType, passengersFilter, luggageFilter, sortBy } from '../lib/stores/filterStore';
+    import { passengersFilter } from '../lib/stores/filterStore';
     import { onMount } from 'svelte';
     import L from 'leaflet';
     import 'leaflet/dist/leaflet.css';
-    import { getData } from '../lib/api';
+    import { apiClient } from '../lib/api/client';
+    import { extractRideOfferGuidFromSearchRow, isRideOfferGuid } from '../lib/api/rideOfferGuid';
+    import { govNameVariants } from '../lib/data/govNameVariants';
     import type { DriverCardUi } from '../lib/types/marketplaceUi';
 
     let map: L.Map;
@@ -76,14 +79,9 @@
 
     let listLoading = false;
     let listError = '';
-    // Map API returned matches to DriverCardUi representation
+    /** تنبيه غير حاجب: السيرفر لا يُرجع rideOfferId في Search */
+    let listWarning = '';
     let sourceDrivers: DriverCardUi[] = [];
-
-    // Optional: promo loaded flags from your UI
-    let promoTitle = '';
-    let promoSubtitle = '';
-    let promoCode = 'AIRPORT20';
-    let promoLoaded = false;
 
     // Convert seats to number from the text filter
     $: seatCountInt = parseInt($passengersFilter) || 1;
@@ -96,61 +94,106 @@
 
         listLoading = true;
         listError = '';
+        listWarning = '';
         try {
-            const params = new URLSearchParams({
-                pickupProvince: fromGov,
-                dropoffProvince: toGov,
-                seatCount: seatCountInt.toString(),
-                pageNum: '1',
-                pageSize: '20'
-            });
+            // بعض عروض السائق قد تُخزن المحافظات بالإنجليزية أو العربية.
+            const pickupCandidates = govNameVariants[fromGov] || [fromGov];
+            const dropoffCandidates = govNameVariants[toGov] || [toGov];
+            const mergedOffers: any[] = [];
+            const seenIds = new Set<string>();
 
-            // Make the GET request to the real API
-            const response = await fetch(`https://aqaariq.com/marketplace/api/v1/rideoffers/Search?${params.toString()}`);
-            if (!response.ok) {
-                throw new Error('فشل جلب أحدث الرحلات المتاحة');
+            for (const pickup of pickupCandidates) {
+                for (const dropoff of dropoffCandidates) {
+                    const params = new URLSearchParams({
+                        PickupProvince: pickup,
+                        DropoffProvince: dropoff,
+                        SeatCount: String(seatCountInt),
+                        PageNum: '1',
+                        PageSize: '20'
+                    });
+                    const res = await apiClient.get<any>(`/RideOffer/Search?${params.toString()}`);
+                    const offersList = res.data?.data || [];
+                    for (const item of offersList) {
+                        const guid = extractRideOfferGuidFromSearchRow(item);
+                        const key =
+                            guid ||
+                            JSON.stringify([
+                                item.pickupProvince,
+                                item.dropoffProvince,
+                                item.driverName,
+                                item.price,
+                            ]);
+                        if (!seenIds.has(key)) {
+                            seenIds.add(key);
+                            mergedOffers.push(item);
+                        }
+                    }
+                }
             }
-            
-            const resultRaw = await response.json();
-            const offersList = resultRaw.data || [];
 
-            // Map standard API response (RideOffersSearchFields) to the component's internal DriverCardUi structure
-            sourceDrivers = offersList.map((apiOffer: any, index: number) => ({
-                id: apiOffer.rideOfferId || `offer-${index}`,
-                name: apiOffer.companyName || 'شركة توصيل',
-                driverName: apiOffer.driverName,
-                car: `${apiOffer.carBrand} ${apiOffer.carModel}`,
-                rating: 5.0, // defaults
-                type: index === 0 ? 'featured' : 'small', // just for UI variance
-                icon: 'directions_car',
-                price: `${apiOffer.price} د.ع`,
-                rawPrice: apiOffer.price
-            }));
+            if (mergedOffers.length > 0) {
+                const anyGuid = mergedOffers.some((o) => extractRideOfferGuidFromSearchRow(o));
+                if (!anyGuid) {
+                    listWarning =
+                        'يمكنك متابعة اختيار المركبة والوصول لشاشة الدفع. لتأكيد الحجز فعلياً يحتاج السيرفر إرجاع rideOfferId في RideOffer/Search، وإلا لن يقبل POST /Ride.';
+                }
+            }
+
+            sourceDrivers = mergedOffers.map((apiOffer: any, index: number) => {
+                const guid = extractRideOfferGuidFromSearchRow(apiOffer);
+                const stableKey = [
+                    apiOffer.pickupProvince,
+                    apiOffer.dropoffProvince,
+                    apiOffer.driverName,
+                    apiOffer.companyName,
+                    apiOffer.price,
+                    index,
+                ].join('|');
+                return {
+                    id: guid ?? `preview-${stableKey}`,
+                    ...(guid ? { bookingOfferId: guid } : {}),
+                    name: apiOffer.companyName || 'شركة توصيل',
+                    driverName: apiOffer.driverName,
+                    car: [apiOffer.carBrand, apiOffer.carModel].filter(Boolean).join(' ') || '—',
+                    rating: 5.0,
+                    reviews: '0',
+                    badge: guid ? 'متاح' : 'عرض فقط',
+                    type: index === 0 ? 'featured' : 'small',
+                    icon: 'directions_car',
+                    price: `${apiOffer.price} د.ع`,
+                    carTypes: [],
+                    passengers: [],
+                    luggage: [],
+                    interactions: 0,
+                    hasHemam: false,
+                };
+            });
         } catch (e: any) {
-            listError = e.message || 'تعذّر تحميل أحدث الرحلات المتاحة';
+            listError = e.message || 'تعذّر تحميل الرحلات المتاحة';
             sourceDrivers = [];
         } finally {
             listLoading = false;
         }
     }
 
-    onMount(() => {
-        // Only load promo since search now requires province selection
-        // Promos placeholder
-        promoTitle = 'خصم خاص 20%';
-        promoLoaded = true;
-    });
+
 
     $: filteredAndSorted = sourceDrivers; // The API does the filtering. We can still apply some sorting if needed.
 
-    function handleBookAction(route: any, offerId?: string) {
+    function handleBookAction(route: Route, driver: DriverCardUi) {
         if (!fromGov || !toGov) {
             alert('يرجى اختيار المحافظة (مكان الانطلاق والوجهة) للمتابعة.');
             return;
         }
-        if (offerId) {
-            bookingStore.update((b: any) => ({ ...b, rideOfferId: String(offerId) }));
-        }
+        const guid = driver.bookingOfferId;
+        bookingStore.update((b: any) => ({
+            ...b,
+            serviceType: 'Inter-city',
+            pickupProvince: fromGov,
+            dropoffProvince: toGov,
+            searchSeatCount: seatCountInt,
+            rideOfferId: guid && isRideOfferGuid(guid) ? String(guid) : undefined,
+        }));
         currentRoute.set(route);
     }
 </script>
@@ -159,6 +202,11 @@
     {#if listError}
         <div class="rounded-[1.5rem] border border-error/25 bg-error-container/50 text-on-error-container text-[11px] font-bold p-4 text-right" role="alert">
             {listError}
+        </div>
+    {/if}
+    {#if listWarning}
+        <div class="rounded-[1.5rem] border border-tertiary/30 bg-tertiary/10 text-on-surface text-[11px] font-bold p-4 text-right leading-relaxed" role="status">
+            {listWarning}
         </div>
     {/if}
     
@@ -258,7 +306,7 @@
                         </div>
 
                         <div class="flex gap-2 w-full">
-                            <button on:click={() => handleBookAction('select-car', String(driver.id))} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">احجز الآن</button>
+                            <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">احجز الآن</button>
                             <button class="flex-1 bg-primary/10 text-primary border border-primary/20 px-4 py-3 text-sm rounded-xl font-bold transition-all hover:bg-primary hover:text-white">التفاصيل</button>
                         </div>
                     </div>
@@ -285,12 +333,12 @@
                             <span class="font-black text-primary">{driver.price}</span>
                             <span class="text-on-surface-variant">السعر</span>
                         </div>
-                        <button class="w-full bg-primary/10 text-primary border border-primary/20 py-3 text-sm rounded-xl font-bold hover:bg-primary hover:text-white transition-all">معاينة</button>
+                        <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="w-full bg-primary/10 text-primary border border-primary/20 py-3 text-sm rounded-xl font-bold hover:bg-primary hover:text-white transition-all {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">متابعة</button>
                     </div>
                 </div>
 
             {:else if driver.type === 'simple'}
-                <button on:click={() => handleBookAction('select-car', String(driver.id))} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale' : ''}">
+                <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">
                     <div class="w-16 h-16 shrink-0 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center">
                         <span class="material-symbols-outlined text-primary text-2xl">{driver.icon}</span>
                     </div>
@@ -315,13 +363,9 @@
     <section class="rounded-[2rem] bg-[#1D1B1C] p-6 relative overflow-hidden text-white mt-4">
         <div class="relative z-10 w-full text-right">
             <span class="text-[#FAC445] font-black uppercase text-[10px] mb-2 block">عرض خاص للمسافرين</span>
-            <h2 class="text-lg font-bold mb-2">{promoLoaded && promoTitle ? promoTitle : 'احجز رحلتك القادمة واحصل على خصم 20%'}</h2>
+            <h2 class="text-lg font-bold mb-2">احجز رحلتك القادمة واحصل على خصم 20%</h2>
             <p class="text-white/60 text-xs mb-4">
-                {#if promoLoaded && promoSubtitle}
-                    {promoSubtitle}
-                {:else}
-                    استخدم الكود <span class="text-[#FAC445] font-bold">{promoCode}</span> عند الحجز
-                {/if}
+                استخدم الكود <span class="text-[#FAC445] font-bold">AIRPORT20</span> عند الحجز
             </p>
             <button class="bg-white text-[#1D1B1C] w-full py-3 text-sm rounded-xl font-bold active:scale-95 transition-transform">اكتشف العروض</button>
         </div>

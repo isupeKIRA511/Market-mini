@@ -8,15 +8,15 @@
     onMount(async () => {
         try {
             const data = await getData('/api/history');
-            trips = data;
+            if (data && Array.isArray(data) && data.length > 0) {
+                trips = data;
+            } else {
+                throw new Error('empty array');
+            }
         } catch (error) {
             trips = [
-                { id: 1, date: '2024-03-24', time: '10:30 ص', from: 'حي المنصور', to: 'مطار بغداد', price: '25,000 د.ع', status: 'مكتملة', driver: 'أحمد علي', car: 'تويوتا كامري 2023', distance: '15 كم', duration: '25 دقيقة' },
-                { id: 2, date: '2024-03-20', time: '02:15 م', from: 'حي الجادرية', to: 'الكرادة', price: '10,000 د.ع', status: 'مكتملة', driver: 'محمد جاسم', car: 'هيونداي النترا 2022', distance: '8 كم', duration: '15 دقيقة' },
-                { id: 3, date: '2024-03-15', time: '08:00 ص', from: 'شارع فلسطين', to: 'مطار بغداد', price: '28,000 د.ع', status: 'ملغاة', driver: 'خالد سعد', car: 'تويوتا كورولا 2021', distance: '22 كم', duration: '35 دقيقة' },
-                { id: 4, date: '2024-03-10', time: '11:45 م', from: 'اليرموك', to: 'الحارثية', price: '12,000 د.ع', status: 'مكتملة', driver: 'زيد عمر', car: 'كيا سيراتو 2023', distance: '10 كم', duration: '20 دقيقة' },
-                { id: 5, date: '2024-03-05', time: '07:30 ص', from: 'زيونة', to: 'الباب الشرقي', price: '8,000 د.ع', status: 'مكتملة', driver: 'ياسر حسين', car: 'تويوتا يارس 2022', distance: '6 كم', duration: '12 دقيقة' },
-                { id: 6, date: '2024-03-01', time: '10:00 ص', from: 'السيدية', to: 'الأعظمية', price: '15,000 د.ع', status: 'مكتملة', driver: 'علي محمود', car: 'هيونداي سوناتا 2023', distance: '18 كم', duration: '30 دقيقة' },
+                { id: 1, date: '2024-03-24', time: '10:30 ص', title: 'التنقل بين المنزل والمطار', from: 'المنزل', to: 'مطار بغداد', price: '25,000 د.ع', status: 'مكتملة', driver: 'أحمد علي', car: 'تويوتا كامري 2023', distance: '15 كم', duration: '25 دقيقة' },
+                { id: 2, date: '2024-03-20', time: '02:15 م', title: 'التنقل بين المحافظات', from: 'بغداد', to: 'البصرة', price: '150,000 د.ع', status: 'مكتملة', driver: 'محمد جاسم', car: 'هيونداي النترا 2022', distance: '550 كم', duration: '6 ساعات' }
             ];
         }
     });
@@ -119,13 +119,14 @@
 
     <div class="space-y-4">
         {#each trips as trip}
-            <div 
+            <button 
+              type="button"
               on:click={() => openDetails(trip)}
-              class="bg-surface-container-lowest p-5 rounded-[24px] shadow-sm border border-outline-variant/10 hover:bg-surface-container-low transition-all cursor-pointer group active:scale-[0.98]">
+              class="w-full text-right bg-surface-container-lowest p-5 rounded-[24px] shadow-sm border border-outline-variant/10 hover:bg-surface-container-low transition-all cursor-pointer group active:scale-[0.98]">
                 <div class="flex justify-between items-start mb-4" dir="rtl">
                     <div class="text-right">
                         <p class="text-[10px] font-bold text-on-surface-variant opacity-60 mb-1">{trip.date} • {trip.time}</p>
-                        <h3 class="text-base font-black text-on-surface">مشوار إلى {trip.to}</h3>
+                        <h3 class="text-base font-black text-on-surface">{trip.title}</h3>
                     </div>
                     <div class="px-3 py-1 rounded-full text-[10px] font-black {trip.status === 'مكتملة' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
                         {trip.status}
@@ -146,22 +147,12 @@
 
                 <div class="pt-4 border-t border-outline-variant/5 flex justify-between items-center" dir="rtl">
                     <div class="text-primary font-black text-sm">{trip.price}</div>
-                    <button class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1 hover:text-primary transition-colors">
+                    <span class="text-[10px] font-bold text-on-surface-variant flex items-center gap-1 group-hover:text-primary transition-colors">
                         عرض التفاصيل
                         <span class="material-symbols-outlined text-[14px]">chevron_left</span>
-                    </button>
+                    </span>
                 </div>
-            </div>
+            </button>
         {/each}
     </div>
 </div>
-
-<style>
-    @keyframes slide-up {
-        from { transform: translateY(100%); }
-        to { transform: translateY(0); }
-    }
-    .animate-slide-up {
-        animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-</style>

@@ -93,8 +93,13 @@
                             <span class="text-[10px] text-on-surface-variant mb-1">د.ع</span>
                         </div>
                     </div>
-                    <div class="w-1/2 p-2">
-                        <img alt="سيارة ٤ راكب" class="w-full h-auto object-contain opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCw4AoKdXw7z-hqAqSy8MRwYcNAPAVy4GFAAvBd1iVwDgous44j3zPxBbANKIG2G8AmCWpO-K7UC7KRJHlExDxxybReN-qABW-ewrB8LADf8_eTVERUL-ER1VmDC3J2pD_g3KpNXRS4qpbDyQmo5kjFJvheFWUMKt2ZlXXF5LJdxk1eN_LRGxZyg6-VEqM3kPqSc-JMe9Rjc9v6kiOPyzfoXZYNleTaT2f21ThTwq9vkzZ11jRKB4M6IXa0SezOGbBvum2Uy47FgjY4"/>
+                    <div class="w-1/2 p-2 flex items-center justify-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-full h-24 text-on-surface opacity-80" viewBox="0 0 24 24" stroke-width="1.2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                          <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                          <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                          <path d="M5 17h-2v-6l2 -5h9l4 5h1a2 2 0 0 1 2 2v4h-2m-4 0h-6m-6 -6h15m-6 0v-5" />
+                        </svg>
                     </div>
                 </div>
                 {#if selectedCar === 'sedan'}
@@ -122,9 +127,14 @@
                             <span class="text-[10px] text-on-surface-variant mb-1">د.ع</span>
                         </div>
                     </div>
-                    <div class="w-1/2 p-2 relative bg-surface-container-highest rounded-lg flex items-center justify-center overflow-hidden">
-                        <span class="material-symbols-outlined text-outline-variant text-[64px] absolute pointer-events-none opacity-20">directions_car</span>
-                        <img alt="سيارة عائلية" class="w-full h-auto object-contain drop-shadow-lg z-10" style="filter: hue-rotate(200deg);" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCxvoENcrF5olGf6Doq5P6doum9RPeZ7Z0vOjULbRIdJ3G6YPjEA2Fixppp9Pe5Ej8Slu8gRzQXYswhh1dsX8sMErGYNdrb5UCmXVoh-rVWT4XMfsWNX9cpZSU-NxkS7kjohS9861NaufsBbKKodo6ClA8v6FTX8us5JjhJCh6CS3mDQUmDXriO-VM2ac46L8ZcRq9VldswgnzUY7vB2JPKtfibuMMpGyej6sipYedklmUcWipM5Ja7FOLT6sMNG3l22V1L07CyM-NZ"/>
+                    <div class="w-1/2 p-2 relative bg-[#e3f2fd]/30 rounded-lg flex items-center justify-center overflow-hidden">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-full h-24 text-[#1976d2] z-10 drop-shadow-md" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                          <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                          <path d="M7 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                          <path d="M17 17m-2 0a2 2 0 1 0 4 0a2 2 0 1 0 -4 0" />
+                          <path d="M5 17h-2v-4l3 -5h8l3 5h3v4h-2m-4 0h-6m-6 -6h15" />
+                          <path d="M9 8h4v3h-4z" />
+                        </svg>
                     </div>
                 </div>
                 {#if selectedCar === 'suv'}

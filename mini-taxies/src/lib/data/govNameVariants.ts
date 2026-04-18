@@ -1,0 +1,21 @@
+/** أسماء محافظات عربية ↔ إنجليزية لطلبات RideOffer/Search */
+export const govNameVariants: Record<string, string[]> = {
+  بغداد: ['بغداد', 'Baghdad'],
+  البصرة: ['البصرة', 'Basra'],
+  نينوى: ['نينوى', 'Nineveh', 'Mosul'],
+  أربيل: ['أربيل', 'Erbil', 'Arbil'],
+  النجف: ['النجف', 'Najaf'],
+  'ذي قار': ['ذي قار', 'Dhi Qar', 'Nasiriyah', 'Nasiriya'],
+  كركوك: ['كركوك', 'Kirkuk'],
+  الأنبار: ['الأنبار', 'Anbar', 'Al Anbar'],
+  ديالى: ['ديالى', 'Diyala', 'Diala'],
+  المثنى: ['المثنى', 'Muthanna', 'Al Muthanna'],
+  القادسية: ['القادسية', 'Qadisiyyah', 'Al Qadisiyyah', 'Diwaniyah'],
+  ميسان: ['ميسان', 'Maysan', 'Missan', 'Amarah'],
+  واسط: ['واسط', 'Wasit'],
+  'صلاح الدين': ['صلاح الدين', 'Salah al-Din', 'Salahuddin'],
+  دهوك: ['دهوك', 'Duhok', 'Dohuk'],
+  السليمانية: ['السليمانية', 'Sulaymaniyah', 'Sulaimaniyah'],
+  بابل: ['بابل', 'Babil', 'Babylon'],
+  كربلاء: ['كربلاء', 'Karbala', 'Karbalaa'],
+};

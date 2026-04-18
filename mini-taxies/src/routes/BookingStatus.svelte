@@ -2,10 +2,28 @@
   import { onMount, onDestroy } from 'svelte';
   import { currentRoute } from '../lib/stores/navigationStore';
   import { bookingStore } from '../lib/stores/bookingStore';
-  import { getData } from '../lib/api';
+  import { apiClient } from '../lib/api/client';
+
+  /** يطابق قيم الحالة في وثائق الـ API — للعرض والمقارنة مع واجهة المتابعة */
+  function rideStatusArLabel(status: string | undefined): string {
+    const map: Record<string, string> = {
+      RequestingRide: 'في انتظار قبول السائق',
+      AcceptedRide: 'السائق في الطريق إليك',
+      PickingYouUp: 'السائق يتجه لموقعك',
+      TaxiAwaitingYou: 'وصل السائق!',
+      TransportingYou: 'أنت في الرحلة',
+      Completed: 'اكتملت الرحلة',
+      PassengerCancelled: 'ألغيتَ الرحلة',
+      DriverDeclined: 'اعتذر السائق',
+    };
+    return status ? map[status] ?? status : '…';
+  }
 
   let mapContainer: HTMLElement;
-  let driverDistanceStr = '4 دقائق';
+  /** نص عربي للحالة (متابعة الرحلة) */
+  let driverDistanceStr = 'جاري التحميل…';
+  /** القيمة الخام من السيرفر لمقارنة واجهة «وصل السائق» */
+  let rawRideStatus = '';
   
   let map: any;
   let interval: any;
@@ -60,31 +78,38 @@
 
       const fetchStatus = async () => {
           try {
-              // Note: Using apiClient for intercepted requests
-              const { apiClient } = await import('../lib/api/client');
-              const res = await apiClient.get<any>(`/rides/${rideId}`);
-              const ride = res.data.data;
+              // Swagger: GET /Ride/{ride_id} — تفاصيل الرحلة للمتابعة على الخريطة
+              const res = await apiClient.get<any>(`/Ride/${rideId}`);
+              const ride = res?.data?.data;
 
               if (ride) {
-                  // Update UI status
+                  let effectiveStatus = ride.status || '';
+                  try {
+                      const st = await apiClient.get<any>(`/Ride/${rideId}/status`);
+                      const d = st?.data?.data;
+                      if (typeof d === 'string' && d) effectiveStatus = d;
+                  } catch {
+                      /* نفس مسار Swagger GET /Ride/{id}/status — إن فشل نكتفي بحقل status من جسم الرحلة */
+                  }
+                  rawRideStatus = effectiveStatus;
+                  driverDistanceStr = rideStatusArLabel(effectiveStatus);
+
                   driverInfo = {
                       name: ride.driverName || 'جاري البحث...',
-                      car: `${ride.carBrand} ${ride.carModel}` || '...',
-                      plate: ride.carPlateNumber || '...',
+                      car: [ride.carBrand, ride.carModel].filter(Boolean).join(' ') || '...',
+                      plate: ride.carLicensePlate || ride.carPlateNumber || '...',
                       rating: '5.0'
                   };
 
-                  driverDistanceStr = ride.status; // Can map this to readable Arabic
-
-                  // Update Driver Location if available
-                  if (ride.driverLat && ride.driverLng) {
+                  const dLat = ride.driverLat ?? ride.driverLatitude;
+                  const dLng = ride.driverLng ?? ride.driverLongitude;
+                  if (dLat != null && dLng != null && !Number.isNaN(+dLat) && !Number.isNaN(+dLng)) {
                       if (!driverMarker) {
-                          driverMarker = L.marker([ride.driverLat, ride.driverLng], { icon: taxiIcon }).addTo(map);
+                          driverMarker = L.marker([+dLat, +dLng], { icon: taxiIcon }).addTo(map);
                       } else {
-                          driverMarker.setLatLng([ride.driverLat, ride.driverLng]);
+                          driverMarker.setLatLng([+dLat, +dLng]);
                       }
-                      
-                      // Auto-fit if both markers exist
+
                       const bounds = L.latLngBounds([driverMarker.getLatLng(), userMarker.getLatLng()]);
                       map.fitBounds(bounds, { padding: [50, 50] });
                   }
@@ -120,9 +145,9 @@
         <div class="absolute inset-0 bg-gradient-to-t from-on-surface/40 to-transparent pointer-events-none z-10"></div>
         <div class="absolute bottom-4 left-4 bg-surface-container-lowest/90 backdrop-blur-md px-4 py-2 rounded-xl flex items-center gap-2 shadow-lg z-20">
             <span class="text-[10px] font-bold text-on-surface">
-                {driverDistanceStr === 'وصل السائق!' ? driverDistanceStr : `السائق يقترب (${driverDistanceStr})`}
+                {rawRideStatus === 'TaxiAwaitingYou' ? driverDistanceStr : `متابعة الرحلة: ${driverDistanceStr}`}
             </span>
-            {#if driverDistanceStr !== 'وصل السائق!'}
+            {#if rawRideStatus !== 'TaxiAwaitingYou'}
                <span class="w-2.5 h-2.5 bg-primary rounded-full animate-pulse"></span>
             {:else}
                <span class="material-symbols-outlined text-[14px] text-green-600">check_circle</span>
@@ -130,7 +155,7 @@
         </div>
     </section>
 
-    {#if driverDistanceStr === 'وصل السائق!'}
+    {#if rawRideStatus === 'TaxiAwaitingYou'}
     <div class="w-full bg-primary/10 p-5 rounded-[24px] border border-primary/20 text-right space-y-3">
         <h3 class="font-black text-on-surface text-sm">كيف كانت تجربتك؟</h3>
         <div class="flex justify-end gap-2">
@@ -190,7 +215,9 @@
         
         <div class="flex items-center gap-4 flex-row-reverse text-right">
             <div class="relative shrink-0">
-                <img class="w-14 h-14 rounded-2xl object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDU_rM1-59cgOPJLwtFZMN91lFQ_C7u8eQDWSK4uMfXIwwc4GXc-L3GfYYaDdLNqSTD4KJBdHY3gHXrt6W1dGkznMk0xNw34yvnXj5I4C4X_guAVNzXUqQZlK9vxFfnTZUN9Mz65mMfK2g2TCV5ERt2ESeCWpTprkMuFcqHbdk1BEPdaMn_xRzCb4lGB7ELzzwt9jp2jL5l1gbSsg4W5FnP7sIyQw_S3F2PndKtXb87CE6KwdQSSjFTcho62kOknQWh82b2WOZTR746" alt="Driver"/>
+                <div class="w-14 h-14 rounded-2xl bg-surface-container-high border border-outline-variant/20 flex items-center justify-center shrink-0">
+                    <span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">person</span>
+                </div>
                 <div class="absolute -bottom-1 -left-1 bg-primary text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold">{driverInfo.rating} ★</div>
             </div>
             <div>

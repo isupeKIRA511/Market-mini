@@ -6,6 +6,10 @@ export interface BookingDetails {
     carModel: string;
     passengersCount: number;
     luggageCount: number;
+    /** بين المحافظات: لإعادة جلب rideOfferId عند الدفع إن وُجد في Search */
+    pickupProvince?: string;
+    dropoffProvince?: string;
+    searchSeatCount?: number;
     rideOfferId?: string;
     carType?: string;
     bookingId?: string;

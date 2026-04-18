@@ -3,7 +3,7 @@
    import { onMount } from 'svelte';
    import { userId, userData, logout } from '../lib/stores/authStore';
    import { currentRoute } from '../lib/stores/navigationStore';
-   import { getData } from '../lib/api';
+   import { getCustomerSingle } from '../lib/api/marketplaceV1';
 
    let profileName = '';
    let profilePhone = '';
@@ -17,16 +17,17 @@
            return;
        }
        try {
-           const rec = await getData(`/api/users/${id}`);
+           const res: any = await getCustomerSingle(id);
+           const rec = res?.data || res;
            if (rec) {
-               profileName = String(rec.fullName ?? rec.FullName ?? rec.name ?? snap?.name ?? '');
+               profileName = String(rec.fullName ?? rec.FullName ?? rec.name ?? snap?.name ?? 'مسافر');
                profilePhone = String(rec.phoneNumber ?? rec.PhoneNumber ?? snap?.name ?? '');
            } else {
-               profileName = snap?.name ?? '';
+               profileName = snap?.name ?? 'مسافر';
                profilePhone = snap?.name ?? '';
            }
        } catch {
-           profileName = snap?.name ?? '';
+           profileName = snap?.name ?? 'مسافر';
            profilePhone = snap?.name ?? '';
        }
    }
@@ -78,31 +79,7 @@
             </div>
         </div>
 
-        <button class="w-full p-4 flex flex-row-reverse justify-between items-center border-b border-outline-variant/10 active:bg-surface-container/50 transition-colors">
-            <div class="flex flex-row-reverse items-center gap-3 text-right">
-                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-blue-600 text-[20px]" style="font-variation-settings: 'FILL' 1;">notifications</span>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm text-on-surface">التنبيهات</h4>
-                    <p class="text-[10px] text-on-surface-variant">لديك 3 تنبيهات جديدة</p>
-                </div>
-            </div>
-            <div class="bg-blue-600 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center translate-x-1">3</div>
-        </button>
 
-        <button on:click={() => currentRoute.set('home')} class="w-full p-4 flex flex-row-reverse justify-between items-center border-b border-outline-variant/10 active:bg-surface-container/50 transition-colors">
-            <div class="flex flex-row-reverse items-center gap-3 text-right">
-                <div class="w-10 h-10 bg-primary-container/20 rounded-full flex items-center justify-center shrink-0">
-                    <span class="material-symbols-outlined text-primary text-[20px]">local_taxi</span>
-                </div>
-                <div>
-                    <h4 class="font-bold text-sm text-on-surface">الكونسيرج الذهبي</h4>
-                    <p class="text-[10px] text-on-surface-variant">خدمات التاكسي الفاخرة</p>
-                </div>
-            </div>
-            <span class="material-symbols-outlined text-outline-variant rotate-180">chevron_left</span>
-        </button>
 
         <button class="w-full p-4 flex flex-row-reverse justify-between items-center active:bg-surface-container/50 transition-colors rounded-b-3xl">
             <div class="flex flex-row-reverse items-center gap-3 text-right">

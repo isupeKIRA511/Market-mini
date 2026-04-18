@@ -2,8 +2,9 @@
   import { goto } from '../lib/navigation/goto';
   import { setAuthData } from '../lib/stores/authStore';
   import { skipAuth } from '../lib/config/features';
-  import type { AuthResponse, ApiGetOneResponse, ApiStatusResponse } from '../lib/types/api';
+  import type { AuthResponse } from '../lib/types/api';
   import { apiClient } from '../lib/api/client';
+  import { extractAuthResponse } from '../lib/api/extractAuthResponse';
 
   let phoneNumber = '';
   let otp = '';
@@ -12,7 +13,13 @@
   let otpRequested = false;
 
   function normalizePhone(raw: string): string {
-    return raw.replace(/\s+/g, '').trim();
+    if (!raw) return '';
+    let s = raw.replace(/\s+/g, '').trim();
+    if (s.startsWith('00')) s = '+' + s.slice(2);
+    if (/^0\d{8,}$/.test(s)) s = '+964' + s.slice(1);
+    if (/^964\d+/.test(s)) s = '+' + s;
+    if (!s.startsWith('+') && /^\d+$/.test(s)) s = '+' + s;
+    return s;
   }
 
   $: normalizedPhone = normalizePhone(phoneNumber);
@@ -28,10 +35,15 @@
 
     loading = true;
     try {
-      await apiClient.post('/auth/customer/request-otp', { phoneNumber: normalizedPhone });
+      await apiClient.post('/Auth/customer/request-otp', { phoneNumber: normalizedPhone });
       otpRequested = true;
     } catch (err: any) {
-      errorMsg = err.message || 'تعذّر إرسال رمز التحقق';
+      const raw = err?.response?.data;
+      const hint =
+        typeof raw === 'string' && raw.toLowerCase().includes('not_found')
+          ? 'هذا الرقم غير مسجّل. أنشئ حساباً من «إنشاء حساب جديد» ثم أرسل رمز التحقق.'
+          : err?.message || 'تعذّر إرسال رمز التحقق';
+      errorMsg = hint;
     } finally {
       loading = false;
     }
@@ -48,12 +60,12 @@
 
     loading = true;
     try {
-      const res = await apiClient.post<AuthResponse>('/auth/customer/verify-otp', {
+      const res = await apiClient.post<AuthResponse>('/Auth/customer/verify-otp', {
         phoneNumber: normalizedPhone,
         otp
       });
       
-      const auth = res.data;
+      const auth = extractAuthResponse(res.data);
       if (auth && auth.token && auth.id) {
         setAuthData(auth);
         goto('home');

@@ -2,6 +2,8 @@
 
 export type DriverCardUi = {
   id: string | number;
+  /** إن وُجد من السيرفر يمكن إكمال الحجز؛ بدونه العرض للمعاينة فقط */
+  bookingOfferId?: string;
   type: 'featured' | 'small' | 'simple';
   name: string;
   rating: number;
