@@ -55,14 +55,17 @@ export const apiClient = {
     });
     return handleResponse<T>(response);
   },
-  post: async <T>(url: string, body: unknown, options?: RequestInit): Promise<{ data: T; status: number; statusText: string }> => {
+  post: async <T>(url: string, body?: unknown, options?: RequestInit): Promise<{ data: T; status: number; statusText: string }> => {
     const { headers: optHeaders, ...rest } = options || {};
-    const response = await fetch(`${apiBaseUrl}${url}`, {
+    const init: RequestInit = {
       method: 'POST',
       headers: buildHeaders(optHeaders),
-      body: JSON.stringify(body),
       ...rest,
-    });
+    };
+    if (body !== undefined) {
+      init.body = typeof body === 'string' ? body : JSON.stringify(body);
+    }
+    const response = await fetch(`${apiBaseUrl}${url}`, init);
     return handleResponse<T>(response);
   },
   put: async <T>(url: string, body: unknown, options?: RequestInit): Promise<{ data: T; status: number; statusText: string }> => {

@@ -131,7 +131,7 @@
             const ride: RideModel = response.data.data;
             alert("تم إرسال الطلب بنجاح");
             bookingStore.update(b => ({ ...b, bookingId: ride.id }));
-            currentRoute.set('booking-status');
+            currentRoute.set('history');
         } else {
             errorMsg = response.data.message || 'خطأ في إنشاء الحجز';
         }

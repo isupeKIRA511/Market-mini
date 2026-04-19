@@ -48,11 +48,10 @@
        <div class="absolute -bottom-10 -left-10 w-32 h-32 bg-[#1D1B1C]/5 rounded-full blur-xl"></div>
        
        <div class="flex flex-row-reverse justify-between items-center relative z-10">
-           <div class="flex-1 pl-4">
-               <h2 class="text-2xl font-black text-[#1D1B1C] mb-1">{profileName || $userData?.name || 'مسافر'}</h2>
+           <div class="flex-1 items-center px-4" dir="ltr">
                <div class="flex flex-row-reverse items-center justify-start gap-1">
                    <span class="material-symbols-outlined text-[#1D1B1C]/60 text-sm">call</span>
-                   <p class="text-[#1D1B1C]/80 font-bold text-sm leading-none ltr" dir="ltr">{profilePhone || $userData?.name || '—'}</p>
+                   <p class="text-xl text-[#1D1B1C]/80 font-bold text-sm leading-none ltr" dir="ltr">{profilePhone || $userData?.name || '—'}</p>
                </div>
            </div>
            

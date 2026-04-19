@@ -101,3 +101,9 @@ export interface ApiMyRidesResponse {
     data: RideModel[];
     message: string;
 }
+
+/** GET /Ride/{id}/status — للاستطلاع (رسالة عربية + رمز الحالة) */
+export interface RideStatusPayload {
+    message: string;
+    status: string;
+}

@@ -1,9 +1,7 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import { currentRoute } from "../lib/stores/navigationStore";
     import { bookingStore } from "../lib/stores/bookingStore";
     import LeafletMap from "../lib/components/LeafletMap.svelte";
-    import { getData } from "../lib/api";
     import { apiClient } from "../lib/api/client";
     import {
         buildRideOfferSearchQueryString,
@@ -14,24 +12,6 @@
     import { extractRecordArray } from "../lib/api/marketplaceResponse";
     import type { ApiGetManyResponse, RideOffersSearchFields } from "../lib/types/api";
 
-    /** الـ API لا يعرّف حجز «مطار» منفصلاً؛ البحث يتم بالمحافظة كما في Swagger (RideOffer/Search). */
-    function airportLabelToProvince(airport: string): string | null {
-        const pairs: [string, string][] = [
-            ["بغداد", "بغداد"],
-            ["أربيل", "أربيل"],
-            ["البصرة", "البصرة"],
-            ["النجف", "النجف"],
-            ["السليمانية", "السليمانية"],
-            ["الناصرية", "ذي قار"],
-            ["كركوك", "كركوك"],
-            ["دهوك", "دهوك"],
-        ];
-        for (const [needle, province] of pairs) {
-            if (airport.includes(needle)) return province;
-        }
-        return null;
-    }
-
     let selectedProvince = "";
     const governorates = [
         "بغداد", "البصرة", "نينوى", "أربيل", "النجف", "ذي قار", "كركوك", 
@@ -41,28 +21,16 @@
 
     let continueLoading = false;
 
-    let iraqiAirports: string[] = [];
+    const iraqiAirports: string[] = [
+        "مطار بغداد الدولي",
+        "مطار أربيل الدولي",
+        "مطار البصرة الدولي",
+        "مطار النجف الأشرف الدولي",
+        "مطار السليمانية الدولي",
+        "مطار الناصرية الدولي",
+        "مطار كركوك الدولي",
+    ];
     let selectedAirport = "";
-    let isLoadingAirports = true;
-
-    onMount(async () => {
-        try {
-            const data = await getData("/airports");
-            iraqiAirports = data;
-        } catch (error) {
-            iraqiAirports = [
-                "مطار بغداد الدولي",
-                "مطار أربيل الدولي",
-                "مطار البصرة الدولي",
-                "مطار النجف الأشرف الدولي",
-                "مطار السليمانية الدولي",
-                "مطار الناصرية الدولي",
-                "مطار كركوك الدولي",
-            ];
-        } finally {
-            isLoadingAirports = false;
-        }
-    });
 
     let pickupLocation: { lat: number; lng: number } | null = null;
     let flightNumber = "";
@@ -95,7 +63,7 @@
             return;
         }
 
-        const airportProvince = airportLabelToProvince(selectedAirport);
+        const airportProvince = selectedAirport;
         if (!airportProvince) {
             alert("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
             return;

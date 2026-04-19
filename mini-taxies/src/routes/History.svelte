@@ -1,8 +1,11 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+    import { onMount, onDestroy } from 'svelte';
     import { apiClient } from '../lib/api/client';
     import { extractRecordArray } from '../lib/api/marketplaceResponse';
-    import type { ApiMyRidesResponse } from '../lib/types/api';
+    import type { ApiGetOneResponse, ApiMyRidesResponse, ApiStatusResponse, RideStatusPayload } from '../lib/types/api';
+    import { RIDE_STATUS, canPassengerCancelRide, rideStatusUiAr, shouldPollRideStatus } from '../lib/api/rideStatus';
+
+    const STATUS_POLL_MS = 3000;
 
     type HistoryTrip = {
         id: string;
@@ -14,6 +17,7 @@
         from: string;
         to: string;
         price: string;
+        /** نص من الخادم (رسالة GET /Ride/{id}/status أو حقل اختياري من القائمة) */
         status: string;
         driver: string;
         driverPhone: string;
@@ -26,26 +30,18 @@
     let selectedTrip: HistoryTrip | null = null;
     let loading = true;
     let loadError = '';
+    let pollInterval: ReturnType<typeof setInterval> | undefined;
+    let boardingRideId: string | null = null;
+    let boardError = '';
+    let cancellingRideId: string | null = null;
+    let cancelError = '';
+    /** لعرض خطأ الإلغاء تحت بطاقة الرحلة أو في النافذة */
+    let cancelErrorRideId: string | null = null;
 
     function str(v: unknown, fallback = ''): string {
         if (v == null) return fallback;
         const s = String(v).trim();
         return s || fallback;
-    }
-
-    /** يطابق واجهة السجل: «مكتملة» للنجاح، وباقي الحالات كنص عربي */
-    function rideStatusForHistory(status: string | undefined): string {
-        const map: Record<string, string> = {
-            RequestingRide: 'في انتظار قبول السائق',
-            AcceptedRide: 'السائق في الطريق إليك',
-            PickingYouUp: 'السائق يتجه لموقعك',
-            TaxiAwaitingYou: 'وصل السائق',
-            TransportingYou: 'أنت في الرحلة',
-            Completed: 'مكتملة',
-            PassengerCancelled: 'ملغاة',
-            DriverDeclined: 'مرفوضة',
-        };
-        return status ? map[status] ?? status : '—';
     }
 
     function statusBadgeClass(code: string): string {
@@ -106,6 +102,11 @@
         const title =
             pickup !== '—' && dropoff !== '—' ? `من ${pickup} إلى ${dropoff}` : 'رحلة';
 
+        const listMessage = str(
+            r.statusMessage ?? r.StatusMessage ?? r.message ?? r.Message,
+        );
+        const statusLabel = listMessage || statusRaw || '—';
+
         return {
             id: str(r.id ?? r.Id) || `ride-${index}`,
             statusCode: statusRaw || 'Unknown',
@@ -115,7 +116,7 @@
             from: pickup,
             to: dropoff,
             price: formatPriceIQD(r.price ?? r.Price),
-            status: rideStatusForHistory(statusRaw),
+            status: statusLabel,
             driver: driverName,
             driverPhone,
             car,
@@ -124,19 +125,86 @@
         };
     }
 
-    onMount(async () => {
-        loading = true;
-        loadError = '';
-        try {
-            const res = await apiClient.get<ApiMyRidesResponse>('/Ride/MyRides');
-            const rows = extractRecordArray(res.data);
-            trips = rows.map(mapRideRecordToTrip);
-        } catch (e) {
-            trips = [];
-            loadError = e instanceof Error ? e.message : 'تعذر تحميل سجل الرحلات';
-        } finally {
-            loading = false;
+    function stopStatusPolling() {
+        if (pollInterval != null) {
+            clearInterval(pollInterval);
+            pollInterval = undefined;
         }
+    }
+
+    function canPollRideId(id: string): boolean {
+        return Boolean(id) && !id.startsWith('ride-');
+    }
+
+    async function pollActiveRideStatuses() {
+        const activeIds = trips
+            .filter((t) => canPollRideId(t.id) && shouldPollRideStatus(t.statusCode))
+            .map((t) => t.id);
+        if (activeIds.length === 0) {
+            stopStatusPolling();
+            return;
+        }
+
+        const results = await Promise.all(
+            activeIds.map(async (id) => {
+                try {
+                    const res = await apiClient.get<ApiGetOneResponse<RideStatusPayload>>(`/Ride/${id}/status`);
+                    return { id, payload: res?.data?.data ?? null };
+                } catch {
+                    return { id, payload: null };
+                }
+            }),
+        );
+
+        const byId = new Map(results.map((r) => [r.id, r.payload]));
+        trips = trips.map((t) => {
+            const payload = byId.get(t.id);
+            if (!payload || typeof payload.status !== 'string') return t;
+            const code = payload.status;
+            const msg = typeof payload.message === 'string' ? payload.message.trim() : '';
+            const display = msg || code;
+            return { ...t, statusCode: code, status: display };
+        });
+
+        if (selectedTrip) {
+            const u = trips.find((x) => x.id === selectedTrip!.id);
+            if (u) selectedTrip = u;
+        }
+
+        if (!trips.some((t) => shouldPollRideStatus(t.statusCode))) {
+            stopStatusPolling();
+        }
+    }
+
+    function startStatusPolling() {
+        stopStatusPolling();
+        if (!trips.some((t) => shouldPollRideStatus(t.statusCode))) return;
+        void pollActiveRideStatuses();
+        pollInterval = setInterval(() => void pollActiveRideStatuses(), STATUS_POLL_MS);
+    }
+
+    onMount(() => {
+        (async () => {
+            loading = true;
+            loadError = '';
+            try {
+                const res = await apiClient.get<ApiMyRidesResponse>('/Ride/MyRides');
+                const rows = extractRecordArray(res.data);
+                trips = rows.map(mapRideRecordToTrip);
+            } catch (e) {
+                trips = [];
+                loadError = e instanceof Error ? e.message : 'تعذر تحميل سجل الرحلات';
+            } finally {
+                loading = false;
+            }
+            if (!loadError && trips.length > 0) {
+                startStatusPolling();
+            }
+        })();
+    });
+
+    onDestroy(() => {
+        stopStatusPolling();
     });
 
     function openDetails(trip: HistoryTrip) {
@@ -145,6 +213,46 @@
 
     function closeDetails() {
         selectedTrip = null;
+        boardError = '';
+        cancelError = '';
+        cancelErrorRideId = null;
+    }
+
+    async function cancelRide(rideId: string) {
+        if (!canPollRideId(rideId)) return;
+        const trip = trips.find((t) => t.id === rideId);
+        if (!trip || !canPassengerCancelRide(trip.statusCode)) return;
+        if (!confirm('هل تريد إلغاء هذه الرحلة؟')) return;
+        cancellingRideId = rideId;
+        cancelError = '';
+        cancelErrorRideId = null;
+        try {
+            await apiClient.delete<ApiStatusResponse>(`/Ride/${rideId}`);
+            cancelErrorRideId = null;
+            await pollActiveRideStatuses();
+            startStatusPolling();
+        } catch (e) {
+            const m = e instanceof Error ? e.message : 'تعذر إلغاء الرحلة';
+            cancelError = m;
+            cancelErrorRideId = rideId;
+        } finally {
+            cancellingRideId = null;
+        }
+    }
+
+    async function confirmBoarding(rideId: string) {
+        if (!canPollRideId(rideId)) return;
+        boardingRideId = rideId;
+        boardError = '';
+        try {
+            await apiClient.post<ApiStatusResponse>(`/Ride/${rideId}/board`, undefined);
+            await pollActiveRideStatuses();
+            startStatusPolling();
+        } catch (e) {
+            boardError = e instanceof Error ? e.message : 'تعذر تأكيد الصعود';
+        } finally {
+            boardingRideId = null;
+        }
     }
 </script>
 
@@ -170,7 +278,7 @@
                 <div class="flex justify-between items-center bg-surface-container-low p-4 rounded-2xl">
                     <div class="text-right">
                         <p class="text-[10px] font-bold text-on-surface-variant opacity-60 mb-0.5">الحالة</p>
-                        <p class="text-sm font-black {statusTextClass(selectedTrip.statusCode)}">{selectedTrip.status}</p>
+                        <p class="text-sm font-black {statusTextClass(selectedTrip.statusCode)}">{rideStatusUiAr(selectedTrip.statusCode, selectedTrip.status)}</p>
                     </div>
                     <div class="text-left">
                         <p class="text-[10px] font-bold text-on-surface-variant opacity-60 mb-0.5">التكلفة</p>
@@ -212,9 +320,48 @@
                     </div>
                 </div>
 
+                {#if canPassengerCancelRide(selectedTrip.statusCode) && canPollRideId(selectedTrip.id)}
+                    <div class="space-y-2">
+                        {#if cancelError && cancelErrorRideId === selectedTrip.id}
+                            <p class="text-xs text-red-600 text-right">{cancelError}</p>
+                        {/if}
+                        <button
+                            type="button"
+                            disabled={cancellingRideId === selectedTrip.id}
+                            on:click={() => cancelRide(selectedTrip!.id)}
+                            class="w-full py-3.5 font-bold rounded-2xl border-2 border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-all disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                            {cancellingRideId === selectedTrip.id ? 'جاري الإلغاء…' : 'إلغاء الرحلة'}
+                        </button>
+                    </div>
+                {/if}
+
+                {#if selectedTrip.statusCode === RIDE_STATUS.TaxiAwaitingYou}
+                    <div class="space-y-2 mt-2">
+                        <p class="text-xs text-on-surface-variant text-right">
+                            عند وصول السائق وتجهزك للمغادرة، أكّد أنك صعدتَ إلى المركبة لبدء الرحلة.
+                        </p>
+                        {#if boardError}
+                            <p class="text-xs text-red-600 text-right">{boardError}</p>
+                        {/if}
+                        <button
+                            type="button"
+                            disabled={boardingRideId === selectedTrip.id}
+                            on:click={() => confirmBoarding(selectedTrip!.id)}
+                            class="w-full py-4 bg-primary text-on-primary font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-60 disabled:pointer-events-none"
+                        >
+                            {boardingRideId === selectedTrip.id ? 'جاري التأكيد…' : 'تأكيد الصعود إلى المركبة'}
+                        </button>
+                    </div>
+                {/if}
+
                 <button 
+                  type="button"
                   on:click={closeDetails}
-                  class="w-full py-4 bg-primary text-on-primary font-black rounded-2xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all mt-4">
+                  class="w-full py-4 font-black rounded-2xl transition-all mt-4 {selectedTrip.statusCode === RIDE_STATUS.TaxiAwaitingYou
+                    ? 'bg-surface-container-high text-on-surface border border-outline-variant/20 shadow-sm'
+                    : 'bg-primary text-on-primary shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95'}"
+                >
                     إغلاق
                 </button>
             </div>
@@ -240,7 +387,8 @@
             <button 
               type="button"
               on:click={() => openDetails(trip)}
-              class="w-full text-right bg-surface-container-lowest p-5 rounded-[24px] shadow-sm border border-outline-variant/10 hover:bg-surface-container-low transition-all cursor-pointer group active:scale-[0.98]">
+              class="w-full text-right bg-surface-container-lowest p-5 rounded-[24px] shadow-sm border border-outline-variant/10 hover:bg-surface-container-low transition-all cursor-pointer group active:scale-[0.98]"
+            >
                 <div class="flex justify-between items-start mb-4" dir="rtl">
                     <div class="text-right">
                         {#if trip.date !== '—' || trip.time !== '—'}
@@ -251,7 +399,7 @@
                         <h3 class="text-base font-black text-on-surface">{trip.title}</h3>
                     </div>
                     <div class="px-3 py-1 rounded-full text-[10px] font-black {statusBadgeClass(trip.statusCode)}">
-                        {trip.status}
+                        {rideStatusUiAr(trip.statusCode, trip.status)}
                     </div>
                 </div>
 

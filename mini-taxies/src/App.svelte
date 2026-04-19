@@ -9,7 +9,6 @@
   import Marketplace from './routes/Marketplace.svelte';
   import BookingDetails from './routes/BookingDetails.svelte';
   import SelectCar from './routes/SelectCar.svelte';
-  import BookingStatus from './routes/BookingStatus.svelte';
   import Profile from './routes/Profile.svelte';
   import Login from './routes/Login.svelte';
   import Register from './routes/Register.svelte';
@@ -48,8 +47,6 @@
           <BookingDetails />
         {:else if $currentRoute === 'select-car'}
           <SelectCar />
-        {:else if $currentRoute === 'booking-status'}
-          <BookingStatus />
         {:else if $currentRoute === 'payment'}
           <Payment />
         {:else if $currentRoute === 'profile'}

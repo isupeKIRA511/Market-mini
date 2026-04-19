@@ -10,7 +10,7 @@
         case 'booking-details': return 'تفاصيل الحجز';
         case 'select-car': return 'اختر نوع السيارة';
         case 'payment': return 'الدفع وتأكيد الحجز';
-        case 'booking-status': return 'تتبع الرحلة';
+        case 'history': return 'تتبع الرحلة';
         case 'profile': return 'الحساب الشخصي';
         case 'history': return 'سجل الرحلات';
         default: return 'الرئيسية';
@@ -22,7 +22,7 @@
     else if ($currentRoute === 'booking-details') currentRoute.set('home');
     else if ($currentRoute === 'select-car') currentRoute.set('booking-details');
     else if ($currentRoute === 'payment') currentRoute.set('select-car');
-    else if ($currentRoute === 'booking-status') currentRoute.set('home');
+    else if ($currentRoute === 'history') currentRoute.set('home');
   }
 </script>
 

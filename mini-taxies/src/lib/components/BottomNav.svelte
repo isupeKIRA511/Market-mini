@@ -4,7 +4,6 @@
   const navItems = [
     { id: 'home', icon: 'home', text: 'الرئيسية' },
     { id: 'history', icon: 'history', text: 'السجل' },
-    { id: 'booking-status', icon: 'directions_car', text: 'الحجوزات' },
     { id: 'profile', icon: 'person', text: 'الحساب' }
   ];
 
@@ -15,7 +14,7 @@
   function isItemActive(itemId: string, current: string) {
        if (itemId === 'home') return ['home', 'marketplace', 'booking-details', 'select-car'].includes(current);
        if (itemId === 'history') return current === 'history';
-       if (itemId === 'booking-status') return current === 'booking-status';
+       if (itemId === 'history') return current === 'history';
        if (itemId === 'profile') return current === 'profile';
        return false;
   }
@@ -41,7 +40,7 @@
                <svg width="20" height="20" viewBox="0 0 24 24" fill={isItemActive(item.id, $currentRoute) ? "#1D1B1C" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                </svg>
-          {:else if item.id === 'booking-status'}
+          {:else if item.id === 'history'}
                <svg width="20" height="20" viewBox="0 0 24 24" fill={isItemActive(item.id, $currentRoute) ? "#1D1B1C" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect x="3" y="10" width="18" height="10" rx="2" ry="2"></rect>
                   <path d="M3 10L6 4h12l3 6"></path>
