@@ -7,11 +7,18 @@ export function extractRecordArray(raw: unknown): Record<string, unknown>[] {
   const o = raw as Record<string, unknown>;
 
   if (Array.isArray(o.items)) return o.items as Record<string, unknown>[];
+  if (Array.isArray(o.Items)) return o.Items as Record<string, unknown>[];
+  if (Array.isArray(o.Data)) return o.Data as Record<string, unknown>[];
   if (Array.isArray(o.data) && (o.data[0] === undefined || typeof o.data[0] === 'object')) {
     return o.data as Record<string, unknown>[];
   }
   if (o.data && typeof o.data === 'object' && !Array.isArray(o.data)) {
     const inner = o.data as Record<string, unknown>;
+    if (Array.isArray(inner.items)) return inner.items as Record<string, unknown>[];
+    if (Array.isArray(inner.Items)) return inner.Items as Record<string, unknown>[];
+  }
+  if (o.Data && typeof o.Data === 'object' && !Array.isArray(o.Data)) {
+    const inner = o.Data as Record<string, unknown>;
     if (Array.isArray(inner.items)) return inner.items as Record<string, unknown>[];
   }
   if (Array.isArray(o.results)) return o.results as Record<string, unknown>[];

@@ -22,6 +22,10 @@ describe('extractRecordArray', () => {
   it('يستخرج success + data', () => {
     expect(extractRecordArray({ success: true, data: [{ d: 4 }] })).toEqual([{ d: 4 }]);
   });
+
+  it('يستخرج Data (PascalCase) كما في بعض ردود ASP.NET', () => {
+    expect(extractRecordArray({ success: true, Data: [{ e: 5 }] })).toEqual([{ e: 5 }]);
+  });
 });
 
 describe('extractRecord', () => {

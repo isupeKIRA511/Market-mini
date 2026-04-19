@@ -7,7 +7,7 @@
 
     onMount(async () => {
         try {
-            const data = await getData('/api/history');
+            const data = await getData('/history');
             if (data && Array.isArray(data) && data.length > 0) {
                 trips = data;
             } else {

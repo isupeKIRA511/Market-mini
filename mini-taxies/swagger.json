@@ -1,7 +1,7 @@
 {
   "openapi": "3.0.4",
   "info": {
-    "title": "My API",
+    "title": "TaxiApp REST API",
     "version": "v1"
   },
   "paths": {
@@ -1327,11 +1327,41 @@
               "type": "string",
               "format": "date-time"
             }
+          },
+          {
+            "name": "OneTripOnly",
+            "in": "query",
+            "description": "true لنقل المطارات، false للنقل بين المحافظات",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "OK"
+            "description": "قائمة عروض؛ يجب أن يتضمن كل عنصر معرف عرض (مثل id أو rideOfferId) لاستخدامه في POST /Ride حسب مخطط RideRequest.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/RideOfferSearchRow"
+                      }
+                    },
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string",
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1384,6 +1414,14 @@
     }
   },
   "components": {
+    "securitySchemes": {
+      "bearer": {
+        "type": "http",
+        "description": "Enter your JWT token in the format: Bearer {your_token}",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
     "schemas": {
       "AdminLoginRequest": {
         "type": "object",
@@ -1548,6 +1586,8 @@
           "destinationLatitude",
           "destinationLongitude",
           "dropoffProvince",
+          "maxPassengers",
+          "oneTripOnly",
           "pickupProvince",
           "price"
         ],
@@ -1576,9 +1616,70 @@
           "maxPassengers": {
             "type": "integer",
             "format": "int32"
+          },
+          "oneTripOnly": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
+      },
+      "RideOfferSearchRow": {
+        "description": "صف في نتيجة GET /RideOffer/Search. الخادم يجب أن يعيد معرف العرض (مثلاً id أو rideOfferId) لأن POST /Ride يطلب rideOfferId (RideRequest).",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rideOfferId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "price": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pickupProvince": {
+            "type": "string",
+            "nullable": true
+          },
+          "dropoffProvince": {
+            "type": "string",
+            "nullable": true
+          },
+          "destinationLatitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "destinationLongitude": {
+            "type": "number",
+            "format": "double"
+          },
+          "maxPassengers": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "oneTripOnly": {
+            "type": "boolean"
+          },
+          "companyName": {
+            "type": "string",
+            "nullable": true
+          },
+          "driverName": {
+            "type": "string",
+            "nullable": true
+          },
+          "carBrand": {
+            "type": "string",
+            "nullable": true
+          },
+          "carModel": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": true
       },
       "RideRequest": {
         "required": [
@@ -1595,6 +1696,11 @@
       }
     }
   },
+  "security": [
+    {
+      "bearer": []
+    }
+  ],
   "tags": [
     {
       "name": "Auth"

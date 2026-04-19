@@ -5,7 +5,7 @@
   import { get } from 'svelte/store';
   import { bookingStore } from '../lib/stores/bookingStore';
   import { apiClient } from '../lib/api/client';
-  import { isRideOfferGuid } from '../lib/api/rideOfferGuid';
+  import { isRideOfferGuid, normalizeRideOfferGuidString } from '../lib/api/rideOfferGuid';
   import { resolveRideOfferIdFromSearch } from '../lib/api/resolveRideOfferId';
   import type { CreditCardModel, RideModel, ApiGetManyResponse } from '../lib/types/api';
 
@@ -105,11 +105,12 @@
 
     if (!bookingData.rideOfferId) {
         errorMsg =
-            'لا يوجد معرّف عرض (rideOfferId). إن كنت من «بين المحافظات» ارجع للسوق واضغط احجز من جديد، أو يجب أن يُرجع السيرفر rideOfferId في RideOffer/Search.';
+            'لا يوجد معرّف عرض (rideOfferId). تأكد أن استجابة RideOffer/Search تتضمن مصفوفة عروض ومعرّف GUID لكل صف، ثم جرّب «بين المحافظات»: احجز من السوق من جديد أو من شاشة تفاصيل المطار.';
         loading = false;
         return;
     }
-    if (!isRideOfferGuid(bookingData.rideOfferId)) {
+    const offerIdNormalized = normalizeRideOfferGuidString(bookingData.rideOfferId);
+    if (!isRideOfferGuid(offerIdNormalized)) {
         errorMsg = 'معرّف عرض الرحلة غير صالح (rideOfferId). يرجى العودة واختيار رحلة متاحة.';
         loading = false;
         return;
@@ -123,7 +124,7 @@
     try {
         // Request the ride
         const response = await apiClient.post<any>('/Ride', {
-            rideOfferId: bookingData.rideOfferId
+            rideOfferId: offerIdNormalized,
         });
         
         if (response.data && response.data.data) {

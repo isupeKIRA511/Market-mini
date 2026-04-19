@@ -19,3 +19,21 @@ export const govNameVariants: Record<string, string[]> = {
   بابل: ['بابل', 'Babil', 'Babylon'],
   كربلاء: ['كربلاء', 'Karbala', 'Karbalaa'],
 };
+
+/**
+ * كل المرادفات (عربي/إنجليزي) لمحافظة واحدة.
+ * إذا أُدخل اسم إنجليزي مثل Baghdad يُعاد [بغداد, Baghdad] حتى يطابق ما يخزّنه السيرفر.
+ */
+export function expandProvinceSearchVariants(name: string): string[] {
+  const t = name.trim();
+  if (!t) return [];
+  const direct = govNameVariants[t];
+  if (direct) return [...direct];
+  const lower = t.toLowerCase();
+  for (const variants of Object.values(govNameVariants)) {
+    if (variants.some((v) => v.toLowerCase() === lower)) {
+      return [...variants];
+    }
+  }
+  return [t];
+}

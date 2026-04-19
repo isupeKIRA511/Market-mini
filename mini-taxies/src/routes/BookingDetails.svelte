@@ -5,7 +5,13 @@
     import LeafletMap from "../lib/components/LeafletMap.svelte";
     import { getData } from "../lib/api";
     import { apiClient } from "../lib/api/client";
+    import {
+        buildRideOfferSearchQueryString,
+        hasTokenForRideOfferSearch,
+        rideOfferSearchPath,
+    } from "../lib/api/rideOfferSearch";
     import { extractRideOfferGuidFromSearchRow } from "../lib/api/rideOfferGuid";
+    import { extractRecordArray } from "../lib/api/marketplaceResponse";
     import type { ApiGetManyResponse, RideOffersSearchFields } from "../lib/types/api";
 
     /** الـ API لا يعرّف حجز «مطار» منفصلاً؛ البحث يتم بالمحافظة كما في Swagger (RideOffer/Search). */
@@ -25,6 +31,13 @@
         }
         return null;
     }
+
+    let selectedProvince = "";
+    const governorates = [
+        "بغداد", "البصرة", "نينوى", "أربيل", "النجف", "ذي قار", "كركوك", 
+        "الأنبار", "ديالى", "المثنى", "القادسية", "ميسان", "واسط", 
+        "صلاح الدين", "دهوك", "السليمانية", "بابل", "كربلاء"
+    ];
 
     let continueLoading = false;
 
@@ -77,16 +90,20 @@
     $: formatNum = (num: number) => (num < 10 ? `0${num}` : `${num}`);
 
     async function handleContinue() {
-        if (!selectedAirport || !pickupLocation) {
-            alert("يرجى تحديد كل من المطار ونقطة الموقع على الخريطة أولاً.");
+        if (!selectedAirport || !pickupLocation || !selectedProvince) {
+            alert("يرجى تحديد المطار، المحافظة، ونقطة الموقع على الخريطة أولاً.");
             return;
         }
 
-        const province = airportLabelToProvince(selectedAirport);
-        if (!province) {
+        const airportProvince = airportLabelToProvince(selectedAirport);
+        if (!airportProvince) {
             alert("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
             return;
         }
+
+        const isToAirport = $bookingStore.serviceType === "To Airport";
+        const pickupProvince = isToAirport ? selectedProvince : airportProvince;
+        const dropoffProvince = isToAirport ? airportProvince : selectedProvince;
 
         const payload = {
             pickupLocation: `${pickupLocation?.lat}, ${pickupLocation?.lng}`,
@@ -99,24 +116,31 @@
 
         continueLoading = true;
         try {
-            const params = new URLSearchParams({
-                PickupProvince: province,
-                DropoffProvince: province,
-                SeatCount: String(passengers),
-                PageNum: "1",
-                PageSize: "20",
+            if (!hasTokenForRideOfferSearch()) {
+                alert(
+                    "يجب تسجيل الدخول أولاً. طلب RideOffer/Search يتطلّب Authorization: Bearer كما في واجهة الـ API.",
+                );
+                return;
+            }
+            const qs = buildRideOfferSearchQueryString({
+                pickupProvince,
+                dropoffProvince,
+                seatCount: passengers,
+                oneTripOnly: true,
+                pageNum: 1,
+                pageSize: 20,
             });
             const res = await apiClient.get<ApiGetManyResponse<RideOffersSearchFields>>(
-                `/RideOffer/Search?${params.toString()}`,
+                rideOfferSearchPath(qs),
             );
             const body = res.data;
-            const offers = body?.data ?? [];
-            const first = offers[0];
+            const offers = extractRecordArray(body);
+            const first = offers[0] as unknown as RideOffersSearchFields | undefined;
             const rideOfferId = extractRideOfferGuidFromSearchRow(first);
             if (!rideOfferId) {
                 alert(
                     offers.length === 0
-                        ? "لا توجد رحلات متاحة لهذه المحافظة حالياً. جرّب لاحقاً أو استخدم «بين المحافظات»."
+                        ? `لا توجد رحلات متاحة من ${pickupProvince} إلى ${dropoffProvince} حالياً. جرّب لاحقاً.`
                         : "استجابة البحث لا تتضمن معرّف عرض صالح (GUID) في الحقول المعروفة.",
                 );
                 return;
@@ -126,6 +150,9 @@
                 ...b,
                 ...payload,
                 rideOfferId,
+                pickupProvince,
+                dropoffProvince,
+                searchSeatCount: passengers,
                 price: typeof first?.price === "number" ? first.price : b.price,
                 bookingId: undefined,
             }));
@@ -239,9 +266,38 @@
             {:else}
                 <div class="relative order-1">
                     <label
-                        for="pickup-map"
+                        for="province-select-pickup"
                         class="block text-[11px] font-medium text-on-surface-variant mb-2"
-                        >اختر نقطة الانطلاق في بغداد على الخريطة</label
+                        >اختر محافظة الانطلاق</label
+                    >
+                    <div class="relative w-full mb-4">
+                        <select
+                            id="province-select-pickup"
+                            bind:value={selectedProvince}
+                            dir="rtl"
+                            class="appearance-none w-full bg-surface-container-low outline-none border-none rounded-2xl py-4 px-4 pr-10 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer font-bold border-r-[4px] border-r-primary"
+                        >
+                            <option value="" disabled selected hidden
+                                >يرجى اختيار المحافظة</option
+                            >
+                            {#each governorates as gov}
+                                <option value={gov}>{gov}</option>
+                            {/each}
+                        </select>
+                        <span
+                            class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+                            >my_location</span
+                        >
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                            >expand_more</span
+                        >
+                    </div>
+
+                    <label
+                        for="pickup-map-to"
+                        class="block text-[11px] font-medium text-on-surface-variant mb-2"
+                        >اختر موقع المنزل على الخريطة</label
                     >
                     <LeafletMap
                         on:locationSelected={onLocationSelected}
@@ -277,9 +333,38 @@
             {#if $bookingStore.serviceType === "From Airport"}
                 <div class="relative order-3">
                     <label
-                        for="pickup-map"
+                        for="province-select-dest"
                         class="block text-[11px] font-medium text-on-surface-variant mb-2"
-                        >اختر نقطة الوصول على الخريطة</label
+                        >اختر محافظة الوصول</label
+                    >
+                    <div class="relative w-full mb-4">
+                        <select
+                            id="province-select-dest"
+                            bind:value={selectedProvince}
+                            dir="rtl"
+                            class="appearance-none w-full bg-surface-container-low outline-none border-none rounded-2xl py-4 px-4 pr-10 text-sm text-on-surface focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer font-bold border-r-[4px] border-r-primary"
+                        >
+                            <option value="" disabled selected hidden
+                                >يرجى اختيار المحافظة</option
+                            >
+                            {#each governorates as gov}
+                                <option value={gov}>{gov}</option>
+                            {/each}
+                        </select>
+                        <span
+                            class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+                            >map</span
+                        >
+                        <span
+                            class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none"
+                            >expand_more</span
+                        >
+                    </div>
+
+                    <label
+                        for="pickup-map-from"
+                        class="block text-[11px] font-medium text-on-surface-variant mb-2"
+                        >اختر موقع المنزل على الخريطة</label
                     >
                     <LeafletMap
                         on:locationSelected={onLocationSelected}
@@ -309,7 +394,7 @@
                     <label
                         for="airport-select-dropoff"
                         class="block text-[11px] font-medium text-on-surface-variant mb-2"
-                        >اختر المطار (نقطة الوصول)</label
+                        >اختر المطار (الوجهة)</label
                     >
                     <div class="relative w-full">
                         <select

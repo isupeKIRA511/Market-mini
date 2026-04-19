@@ -1,6 +1,12 @@
 import { apiClient } from './client';
 import { extractRideOfferGuidFromSearchRow } from './rideOfferGuid';
-import { govNameVariants } from '../data/govNameVariants';
+import { extractRecordArray } from './marketplaceResponse';
+import { expandProvinceSearchVariants } from '../data/govNameVariants';
+import {
+  buildRideOfferSearchQueryString,
+  hasTokenForRideOfferSearch,
+  rideOfferSearchPath,
+} from './rideOfferSearch';
 
 /** يحاول استخراج أول rideOfferId GUID من RideOffer/Search (نفس منطق السوق) */
 export async function resolveRideOfferIdFromSearch(
@@ -8,21 +14,22 @@ export async function resolveRideOfferIdFromSearch(
   toGov: string,
   seatCount: number,
 ): Promise<string | null> {
-  const pickupCandidates = govNameVariants[fromGov] || [fromGov];
-  const dropoffCandidates = govNameVariants[toGov] || [toGov];
+  if (!hasTokenForRideOfferSearch()) return null;
+
+  const pickupCandidates = expandProvinceSearchVariants(fromGov);
+  const dropoffCandidates = expandProvinceSearchVariants(toGov);
 
   for (const pickup of pickupCandidates) {
     for (const dropoff of dropoffCandidates) {
-      const params = new URLSearchParams({
-        PickupProvince: pickup,
-        DropoffProvince: dropoff,
-        SeatCount: String(seatCount),
-        PageNum: '1',
-        PageSize: '20',
+      const qs = buildRideOfferSearchQueryString({
+        pickupProvince: pickup,
+        dropoffProvince: dropoff,
+        seatCount,
+        pageNum: 1,
+        pageSize: 20,
       });
-      const res = await apiClient.get<unknown>(`/RideOffer/Search?${params.toString()}`);
-      const body = res.data as { data?: unknown[] };
-      const list = body?.data ?? [];
+      const res = await apiClient.get<unknown>(rideOfferSearchPath(qs));
+      const list = extractRecordArray(res.data);
       for (const item of list) {
         const g = extractRideOfferGuidFromSearchRow(item);
         if (g) return g;

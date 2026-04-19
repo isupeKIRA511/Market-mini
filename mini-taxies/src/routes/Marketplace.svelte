@@ -8,8 +8,14 @@
     import L from 'leaflet';
     import 'leaflet/dist/leaflet.css';
     import { apiClient } from '../lib/api/client';
+    import {
+        buildRideOfferSearchQueryString,
+        hasTokenForRideOfferSearch,
+        rideOfferSearchPath,
+    } from '../lib/api/rideOfferSearch';
     import { extractRideOfferGuidFromSearchRow, isRideOfferGuid } from '../lib/api/rideOfferGuid';
-    import { govNameVariants } from '../lib/data/govNameVariants';
+    import { extractRecordArray } from '../lib/api/marketplaceResponse';
+    import { expandProvinceSearchVariants } from '../lib/data/govNameVariants';
     import type { DriverCardUi } from '../lib/types/marketplaceUi';
 
     let map: L.Map;
@@ -96,23 +102,30 @@
         listError = '';
         listWarning = '';
         try {
+            if (!hasTokenForRideOfferSearch()) {
+                listError =
+                    'يجب تسجيل الدخول لعرض العروض. طلب RideOffer/Search يتطلّب Authorization: Bearer كما في واجهة الـ API.';
+                sourceDrivers = [];
+                return;
+            }
             // بعض عروض السائق قد تُخزن المحافظات بالإنجليزية أو العربية.
-            const pickupCandidates = govNameVariants[fromGov] || [fromGov];
-            const dropoffCandidates = govNameVariants[toGov] || [toGov];
+            const pickupCandidates = expandProvinceSearchVariants(fromGov);
+            const dropoffCandidates = expandProvinceSearchVariants(toGov);
             const mergedOffers: any[] = [];
             const seenIds = new Set<string>();
 
             for (const pickup of pickupCandidates) {
                 for (const dropoff of dropoffCandidates) {
-                    const params = new URLSearchParams({
-                        PickupProvince: pickup,
-                        DropoffProvince: dropoff,
-                        SeatCount: String(seatCountInt),
-                        PageNum: '1',
-                        PageSize: '20'
+                    const qs = buildRideOfferSearchQueryString({
+                        pickupProvince: pickup,
+                        dropoffProvince: dropoff,
+                        seatCount: seatCountInt,
+                        oneTripOnly: false,
+                        pageNum: 1,
+                        pageSize: 20,
                     });
-                    const res = await apiClient.get<any>(`/RideOffer/Search?${params.toString()}`);
-                    const offersList = res.data?.data || [];
+                    const res = await apiClient.get<any>(rideOfferSearchPath(qs));
+                    const offersList = extractRecordArray(res.data);
                     for (const item of offersList) {
                         const guid = extractRideOfferGuidFromSearchRow(item);
                         const key =
@@ -137,6 +150,9 @@
                     listWarning =
                         'يمكنك متابعة اختيار المركبة والوصول لشاشة الدفع. لتأكيد الحجز فعلياً يحتاج السيرفر إرجاع rideOfferId في RideOffer/Search، وإلا لن يقبل POST /Ride.';
                 }
+            } else {
+                listError =
+                    'لا توجد عروض لهذا المسار (الخادم أرجع قائمة فارغة). جرّب محافظات أخرى؛ إن كانت الأسماء بالإنجليزية فقد جُرّبت مرادفات عربية/إنجليزية تلقائياً.';
             }
 
             sourceDrivers = mergedOffers.map((apiOffer: any, index: number) => {

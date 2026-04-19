@@ -50,7 +50,11 @@ export interface CreditCardModel {
     deletedAt: string | null;
 }
 
+/** يطابق حقول شائعة في GET /RideOffer/Search (انظر swagger: RideOfferSearchRow) */
 export interface RideOffersSearchFields {
+    /** معرّف العرض — مطلوب لـ POST /Ride (RideRequest) إن أرجعه الخادم */
+    id?: string;
+    rideOfferId?: string;
     price: number;
     pickupProvince: string;
     dropoffProvince: string;
@@ -61,7 +65,7 @@ export interface RideOffersSearchFields {
     driverName: string;
     carBrand: string;
     carModel: string;
-    rideOfferId?: string; // Optional field if we manage to attach it or need it later
+    oneTripOnly?: boolean;
 }
 
 export interface RideModel {
