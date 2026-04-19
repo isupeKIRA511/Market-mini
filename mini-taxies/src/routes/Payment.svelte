@@ -105,7 +105,7 @@
 
     if (!bookingData.rideOfferId) {
         errorMsg =
-            'لا يوجد معرّف عرض (rideOfferId). تأكد أن استجابة RideOffer/Search تتضمن مصفوفة عروض ومعرّف GUID لكل صف، ثم جرّب «بين المحافظات»: احجز من السوق من جديد أو من شاشة تفاصيل المطار.';
+            'لا يوجد معرّف عرض للحجز. يجب أن يتضمّن كل صف في RideOffer/Search معرّف GUID (مثل id أو rideOfferId). جرّب «بين المحافظات»: احجز من السوق من جديد أو من شاشة تفاصيل المطار.';
         loading = false;
         return;
     }

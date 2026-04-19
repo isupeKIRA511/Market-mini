@@ -54,6 +54,7 @@ function collectGuidCandidates(obj: unknown, keyPath: string[], out: GuidCandida
   }
 }
 
+/** أسماء مباشرة على صف GET /RideOffer/Search — الخادم يعيد عادةً `id` (UUID) أو `rideOfferId` */
 const DIRECT_KEYS = [
   'rideOfferId',
   'RideOfferId',

@@ -24,7 +24,11 @@
 </script>
 
 <div class="flex flex-col gap-4">
-    <div class="bg-primary hover:bg-primary/90 transition-all rounded-[28px] p-6 relative flex flex-col justify-between h-[160px] shadow-sm shadow-primary/20 cursor-pointer active:scale-[0.98]" on:click={() => navigateToBooking('From Airport')}>
+    <button
+        type="button"
+        class="w-full text-right border-0 bg-primary hover:bg-primary/90 transition-all rounded-[28px] p-6 relative flex flex-col justify-between h-[160px] shadow-sm shadow-primary/20 cursor-pointer active:scale-[0.98]"
+        on:click={() => navigateToBooking('From Airport')}
+    >
         <div class="w-full flex flex-row-reverse justify-between items-start z-10">
              <div class="flex flex-row-reverse items-center gap-4">
                  <div class="w-12 h-12 bg-white/40 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shrink-0">
@@ -46,9 +50,13 @@
                  احجز الآن
              </div>
         </div>
-    </div>
+    </button>
 
-    <div class="bg-surface-container-lowest hover:bg-surface-container-low transition-all rounded-[24px] p-4 text-right flex flex-row items-center justify-between h-24 border border-outline-variant/10 shadow-sm cursor-pointer active:scale-[0.98]" on:click={() => navigateToBooking('To Airport')}>
+    <button
+        type="button"
+        class="w-full bg-surface-container-lowest hover:bg-surface-container-low transition-all rounded-[24px] p-4 text-right flex flex-row items-center justify-between h-24 border border-outline-variant/10 shadow-sm cursor-pointer active:scale-[0.98]"
+        on:click={() => navigateToBooking('To Airport')}
+    >
          <div class="flex flex-row-reverse items-center gap-4">
              <div class="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0 border border-blue-100 shadow-sm">
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2.5" stroke="#3B82F6" class="drop-shadow-sm" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -67,9 +75,13 @@
          <div class="w-8 h-8 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-full flex items-center justify-center shrink-0">
              <span class="material-symbols-outlined text-[15px] text-on-surface-variant font-black">arrow_back_ios_new</span>
          </div>
-    </div>
+    </button>
 
-    <div class="bg-surface-container-lowest hover:bg-surface-container-low transition-all rounded-[24px] p-4 text-right flex flex-row items-center justify-between h-24 border border-outline-variant/10 shadow-sm cursor-pointer active:scale-[0.98]" on:click={() => currentRoute.set('marketplace')}>
+    <button
+        type="button"
+        class="w-full bg-surface-container-lowest hover:bg-surface-container-low transition-all rounded-[24px] p-4 text-right flex flex-row items-center justify-between h-24 border border-outline-variant/10 shadow-sm cursor-pointer active:scale-[0.98]"
+        on:click={() => currentRoute.set('marketplace')}
+    >
          <div class="flex flex-row-reverse items-center gap-4">
              <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center shrink-0 border border-green-100 shadow-sm">
                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2.5" stroke="#10B981" class="drop-shadow-sm" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -89,7 +101,7 @@
          <div class="w-8 h-8 bg-surface-container-high hover:bg-surface-container-highest transition-colors rounded-full flex items-center justify-center shrink-0">
              <span class="material-symbols-outlined text-[15px] text-on-surface-variant font-black">arrow_back_ios_new</span>
          </div>
-    </div>
+    </button>
 </div>
 
 <div class="mt-8">

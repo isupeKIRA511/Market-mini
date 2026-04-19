@@ -75,6 +75,7 @@ export interface RideModel {
     passengerName: string;
     driverName: string;
     driverPhoneNumber: string;
+    passenger?: unknown | null;
     rideOfferId: string;
     companyId: string;
     passengerId: string;
@@ -92,4 +93,11 @@ export interface RideModel {
     driverLng?: number | null;
     driverLatitude?: number | null;
     driverLongitude?: number | null;
+}
+
+/** GET /Ride/MyRides — شكل الرد الفعلي (بدون pageNum / totalCount) */
+export interface ApiMyRidesResponse {
+    success: boolean;
+    data: RideModel[];
+    message: string;
 }

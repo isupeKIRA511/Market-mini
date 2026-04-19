@@ -85,7 +85,7 @@
 
     let listLoading = false;
     let listError = '';
-    /** تنبيه غير حاجب: السيرفر لا يُرجع rideOfferId في Search */
+    /** يُعرض إذا لم يُستخرج من أي صف GUID صالح (حقول id / rideOfferId وما شابه) */
     let listWarning = '';
     let sourceDrivers: DriverCardUi[] = [];
 
@@ -148,7 +148,7 @@
                 const anyGuid = mergedOffers.some((o) => extractRideOfferGuidFromSearchRow(o));
                 if (!anyGuid) {
                     listWarning =
-                        'يمكنك متابعة اختيار المركبة والوصول لشاشة الدفع. لتأكيد الحجز فعلياً يحتاج السيرفر إرجاع rideOfferId في RideOffer/Search، وإلا لن يقبل POST /Ride.';
+                        'لم يُعثر في نتائج البحث على معرّف عرض صالح (GUID في الحقول id أو rideOfferId لكل صف). بدون ذلك لن يُقبل POST /Ride. تأكد من أن استجابة RideOffer/Search تتضمن المعرّف لكل عرض.';
                 }
             } else {
                 listError =
