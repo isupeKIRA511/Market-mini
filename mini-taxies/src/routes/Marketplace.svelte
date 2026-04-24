@@ -2,8 +2,8 @@
     import { currentRoute } from '../lib/stores/navigationStore';
     import type { Route } from '../lib/stores/navigationStore';
     import { bookingStore } from '../lib/stores/bookingStore';
-    import FilterAndSort from '../lib/components/FilterAndSort.svelte';
-    import { passengersFilter } from '../lib/stores/filterStore';
+    import { toast } from '../lib/stores/toastStore';
+    import { userData } from '../lib/stores/authStore';
     import { onMount } from 'svelte';
     import L from 'leaflet';
     import 'leaflet/dist/leaflet.css';
@@ -89,12 +89,11 @@
     let listWarning = '';
     let sourceDrivers: DriverCardUi[] = [];
 
-    // Convert seats to number from the text filter
-    $: seatCountInt = parseInt($passengersFilter) || 1;
+    let seatCountInt = 1;
 
     async function searchOffers() {
         if (!fromGov || !toGov) {
-            alert('يرجى تحديد مكان الانطلاق والوجهة أولاً');
+            toast.warning('يرجى تحديد مكان الانطلاق والوجهة أولاً');
             return;
         }
 
@@ -198,7 +197,7 @@
 
     function handleBookAction(route: Route, driver: DriverCardUi) {
         if (!fromGov || !toGov) {
-            alert('يرجى اختيار المحافظة (مكان الانطلاق والوجهة) للمتابعة.');
+            toast.warning('يرجى اختيار المحافظة (مكان الانطلاق والوجهة) للمتابعة.');
             return;
         }
         const guid = driver.bookingOfferId;
@@ -208,13 +207,20 @@
             pickupProvince: fromGov,
             dropoffProvince: toGov,
             searchSeatCount: seatCountInt,
+            carType: 'sedan',
             rideOfferId: guid && isRideOfferGuid(guid) ? String(guid) : undefined,
         }));
-        currentRoute.set(route);
+        // تخطي صفحة اختيار الشركة والانتقال مباشرة للدفع
+        currentRoute.set('payment');
     }
 </script>
 
 <div class="space-y-6">
+    <div class="mb-2 text-right">
+        <h1 class="text-[20px] font-black text-on-surface tracking-tight">سوق الرحلات، {$userData?.name || 'مسافر'} 👋</h1>
+        <p class="text-on-surface-variant text-[11px] font-bold">استكشف السائقين الم متاحين للمناطق البعيدة</p>
+    </div>
+
     {#if listError}
         <div class="rounded-[1.5rem] border border-error/25 bg-error-container/50 text-on-error-container text-[11px] font-bold p-4 text-right" role="alert">
             {listError}
@@ -226,9 +232,7 @@
         </div>
     {/if}
     
-    <section>
-        <FilterAndSort />
-    </section>
+
 
     <section class="bg-surface-container-lowest p-5 rounded-[24px] shadow-sm border border-outline-variant/10 text-right">
         <h2 class="text-base font-bold mb-4 flex items-center justify-end gap-2 text-on-surface">
@@ -322,7 +326,7 @@
                         </div>
 
                         <div class="flex gap-2 w-full">
-                            <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">احجز الآن</button>
+                            <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('payment', driver)} class="flex-1 bg-primary text-white px-4 py-3 text-sm rounded-xl font-bold shadow-lg shadow-primary/20 active:scale-95 transition-transform {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">احجز الآن</button>
                             <button class="flex-1 bg-primary/10 text-primary border border-primary/20 px-4 py-3 text-sm rounded-xl font-bold transition-all hover:bg-primary hover:text-white">التفاصيل</button>
                         </div>
                     </div>
@@ -349,12 +353,12 @@
                             <span class="font-black text-primary">{driver.price}</span>
                             <span class="text-on-surface-variant">السعر</span>
                         </div>
-                        <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="w-full bg-primary/10 text-primary border border-primary/20 py-3 text-sm rounded-xl font-bold hover:bg-primary hover:text-white transition-all {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">متابعة</button>
+                        <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('payment', driver)} class="w-full bg-primary/10 text-primary border border-primary/20 py-3 text-sm rounded-xl font-bold hover:bg-primary hover:text-white transition-all {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">متابعة</button>
                     </div>
                 </div>
 
             {:else if driver.type === 'simple'}
-                <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('select-car', driver)} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">
+                <button type="button" disabled={!fromGov || !toGov} on:click={() => handleBookAction('payment', driver)} class="bg-surface-container-lowest rounded-[1.5rem] p-4 flex items-center gap-4 transition-all duration-300 active:scale-95 border border-outline-variant/10 {(!fromGov || !toGov) ? 'opacity-50 grayscale cursor-not-allowed' : ''}">
                     <div class="w-16 h-16 shrink-0 bg-primary/10 border border-primary/20 rounded-full flex items-center justify-center">
                         <span class="material-symbols-outlined text-primary text-2xl">{driver.icon}</span>
                     </div>

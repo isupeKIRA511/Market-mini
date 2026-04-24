@@ -1,5 +1,7 @@
 <script lang="ts">
   import { currentRoute } from '../stores/navigationStore';
+  import { bookingStore } from '../stores/bookingStore';
+  import { get } from 'svelte/store';
 
   $: title = getTitle($currentRoute);
   
@@ -21,17 +23,21 @@
     if ($currentRoute === 'marketplace') currentRoute.set('home');
     else if ($currentRoute === 'booking-details') currentRoute.set('home');
     else if ($currentRoute === 'select-car') currentRoute.set('booking-details');
-    else if ($currentRoute === 'payment') currentRoute.set('select-car');
+    else if ($currentRoute === 'payment') {
+      // من الدفع: إذا كانت الخدمة بين المحافظات يرجع للسوق، وإلا يرجع لاختيار السيارة
+      const booking = get(bookingStore);
+      if (booking.serviceType === 'Inter-city') {
+        currentRoute.set('marketplace');
+      } else {
+        currentRoute.set('select-car');
+      }
+    }
     else if ($currentRoute === 'history') currentRoute.set('home');
   }
 </script>
 
 <header class="bg-surface flex flex-row-reverse justify-between items-center w-full px-5 py-5 absolute top-0 left-0 z-50">
-    <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border-2 border-primary">
-            <span class="material-symbols-outlined text-primary">person</span>
-        </div>
-    </div>
+    <div></div>
     
     <div class="flex items-center gap-4">
         {#if $currentRoute !== 'home'}

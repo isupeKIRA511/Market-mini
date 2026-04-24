@@ -102,7 +102,7 @@
     >
       <span class="material-symbols-outlined text-[32px] text-primary font-bold">directions_car</span>
     </div>
-    <h1 class="text-[26px] font-black text-on-surface tracking-tight mb-1">Teleport.iq</h1>
+    <h1 class="text-[26px] font-black text-on-surface tracking-tight mb-1">TransPay</h1>
     <p class="text-on-surface-variant text-[11px] font-bold">تسجيل دخول العملاء</p>
   </div>
 

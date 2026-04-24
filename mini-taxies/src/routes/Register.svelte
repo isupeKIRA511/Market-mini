@@ -119,8 +119,8 @@
 
       const auth = extractAuthResponse(res.data);
       if (auth && auth.token && auth.id) {
-        // Set auth temporarily so we can update name
-        setAuthData(auth);
+        // Set auth with the name from the form
+        setAuthData(auth, fullName.trim());
 
         // 2. Update Name
         try {

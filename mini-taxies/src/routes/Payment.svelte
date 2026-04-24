@@ -7,6 +7,7 @@
   import { apiClient } from '../lib/api/client';
   import { isRideOfferGuid, normalizeRideOfferGuidString } from '../lib/api/rideOfferGuid';
   import { resolveRideOfferIdFromSearch } from '../lib/api/resolveRideOfferId';
+  import { toast } from '../lib/stores/toastStore';
   import type { CreditCardModel, RideModel, ApiGetManyResponse } from '../lib/types/api';
 
   let selectedMethod: 'card' | 'cash' = 'cash';
@@ -129,7 +130,7 @@
         
         if (response.data && response.data.data) {
             const ride: RideModel = response.data.data;
-            alert("تم إرسال الطلب بنجاح");
+            toast.success("تم إرسال الطلب بنجاح");
             bookingStore.update(b => ({ ...b, bookingId: ride.id }));
             currentRoute.set('history');
         } else {
@@ -146,6 +147,21 @@
 
 <div class="space-y-6 flex flex-col items-center px-1">
     
+    {#if $bookingStore.serviceType === 'Inter-city'}
+    <!-- Stepper for inter-city: 2 steps -->
+    <div class="flex justify-between items-center mb-6 px-1 w-full mt-2">
+        <div class="flex flex-col items-center gap-2 opacity-40">
+            <div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold text-sm">1</div>
+            <span class="text-[10px] font-medium text-on-surface-variant">اختيار الرحلة</span>
+        </div>
+        <div class="flex-1 h-[2px] bg-primary mx-1"></div>
+        <div class="flex flex-col items-center gap-2">
+            <div class="w-8 h-8 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center font-bold text-sm">2</div>
+            <span class="text-[10px] font-medium text-on-surface">التأكيد</span>
+        </div>
+    </div>
+    {:else}
+    <!-- Stepper for airport: 3 steps -->
     <div class="flex justify-between items-center mb-6 px-1 w-full mt-2">
         <div class="flex flex-col items-center gap-2 opacity-40">
             <div class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center font-bold text-sm">1</div>
@@ -162,6 +178,7 @@
             <span class="text-[10px] font-medium text-on-surface">التأكيد</span>
         </div>
     </div>
+    {/if}
 
     {#if errorMsg}
         <div class="w-full bg-error-container/80 border border-error/20 text-on-error-container text-[11px] font-semibold p-3.5 rounded-2xl text-right" role="alert">
@@ -187,7 +204,7 @@
     <section class="w-full">
          <h2 class="text-lg font-bold mb-4 text-right px-1">طريقة الدفع</h2>
          <div class="grid grid-cols-1 gap-3 mb-4">
-             <button on:click={() => selectedMethod = 'cash'} class="relative w-full text-right overflow-hidden {selectedMethod === 'cash' ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
+             <button on:click={() => { selectedMethod = 'cash'; selectedCardId = ''; }} class="relative w-full text-right overflow-hidden {selectedMethod === 'cash' ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
                  <div class="flex flex-row-reverse items-center justify-between">
                      <div class="flex flex-row-reverse items-center gap-4">
                          <div class="w-10 h-10 bg-surface-container-highest rounded-xl flex items-center justify-center shrink-0">
@@ -209,7 +226,7 @@
              </button>
 
              {#each cards as card}
-             <button on:click={() => { selectedCardId = card.id; selectedMethod = 'card'; }} class="relative w-full text-right overflow-hidden {selectedCardId === card.id ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
+             <button on:click={() => { selectedCardId = card.id; selectedMethod = 'card'; }} class="relative w-full text-right overflow-hidden {(selectedMethod === 'card' && selectedCardId === card.id) ? 'bg-surface-container-lowest ring-2 ring-primary-container shadow-md' : 'bg-surface-container-low hover:bg-surface-container'} rounded-2xl p-4 transition-all duration-300 active:scale-[0.98]">
                  <div class="flex flex-row-reverse items-center justify-between">
                      <div class="flex flex-row-reverse items-center gap-4">
                          <div class="w-10 h-10 bg-surface-container-highest rounded-xl flex items-center justify-center shrink-0">
@@ -220,7 +237,7 @@
                              <p class="text-[10px] font-bold text-on-surface-variant">{card.cardHolderName}</p>
                          </div>
                      </div>
-                     {#if selectedCardId === card.id}
+                     {#if selectedMethod === 'card' && selectedCardId === card.id}
                          <div class="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
                               <span class="material-symbols-outlined text-[14px] text-on-primary" style="font-variation-settings: 'FILL' 1;">check</span>
                          </div>

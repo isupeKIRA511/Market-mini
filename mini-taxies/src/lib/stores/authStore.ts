@@ -46,11 +46,18 @@ if (typeof localStorage !== 'undefined') {
     });
 }
 
-export const setAuthData = (data: AuthResponse) => {
+export const setAuthData = (data: AuthResponse, name?: string) => {
     serverToken.set(data.token);
     userId.set(data.id);
     isAuthenticated.set(true);
-    userData.set({ id: data.id, name: data.phoneNumber } satisfies AuthUserSnapshot);
+    userData.set({ id: data.id, name: name || data.phoneNumber } satisfies AuthUserSnapshot);
+};
+
+export const updateName = (name: string) => {
+    userData.update(data => {
+        if (!data) return null;
+        return { ...data, name };
+    });
 };
 
 export const logout = () => {

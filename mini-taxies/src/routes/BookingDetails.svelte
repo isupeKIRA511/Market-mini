@@ -1,6 +1,7 @@
 <script lang="ts">
     import { currentRoute } from "../lib/stores/navigationStore";
     import { bookingStore } from "../lib/stores/bookingStore";
+    import { toast } from "../lib/stores/toastStore";
     import LeafletMap from "../lib/components/LeafletMap.svelte";
     import { apiClient } from "../lib/api/client";
     import {
@@ -59,13 +60,13 @@
 
     async function handleContinue() {
         if (!selectedAirport || !pickupLocation || !selectedProvince) {
-            alert("يرجى تحديد المطار، المحافظة، ونقطة الموقع على الخريطة أولاً.");
+            toast.warning("يرجى تحديد المطار، المحافظة، ونقطة الموقع على الخريطة أولاً.");
             return;
         }
 
         const airportProvince = selectedAirport;
         if (!airportProvince) {
-            alert("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
+            toast.error("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
             return;
         }
 
@@ -85,7 +86,7 @@
         continueLoading = true;
         try {
             if (!hasTokenForRideOfferSearch()) {
-                alert(
+                toast.error(
                     "يجب تسجيل الدخول أولاً. طلب RideOffer/Search يتطلّب Authorization: Bearer كما في واجهة الـ API.",
                 );
                 return;
@@ -106,7 +107,7 @@
             const first = offers[0] as unknown as RideOffersSearchFields | undefined;
             const rideOfferId = extractRideOfferGuidFromSearchRow(first);
             if (!rideOfferId) {
-                alert(
+                toast.error(
                     offers.length === 0
                         ? `لا توجد رحلات متاحة من ${pickupProvince} إلى ${dropoffProvince} حالياً. جرّب لاحقاً.`
                         : "استجابة البحث لا تتضمن معرّف عرض صالح (GUID) في الحقول المعروفة.",
@@ -128,7 +129,7 @@
             currentRoute.set("select-car");
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : "خطأ غير معروف";
-            alert(`تعذّر جلب عرض الرحلة: ${msg}`);
+            toast.error(`تعذّر جلب عرض الرحلة: ${msg}`);
         } finally {
             continueLoading = false;
         }

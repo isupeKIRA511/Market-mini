@@ -14,6 +14,8 @@
   import Register from './routes/Register.svelte';
   import Payment from './routes/Payment.svelte';
   import History from './routes/History.svelte';
+  import ToastContainer from './lib/components/ToastContainer.svelte';
+  import { theme } from './lib/stores/settingsStore';
 
   // إعادة التفعيل: احذف VITE_SKIP_AUTH أو اجعلها ليست `true` في `.env`
   $: if (!skipAuth && !$isAuthenticated && $currentRoute !== 'login' && $currentRoute !== 'register') {
@@ -22,12 +24,12 @@
 </script>
 
 <!-- Mobile Device Emulator Wrapper -->
-<div class="fixed inset-0 bg-[#1D1B1C] flex items-center justify-center font-sans antialiased selection:bg-primary/30">
-    <!-- Abstract background elements for premium feel -->
-    <div class="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] pointer-events-none"></div>
+<!-- Mobile Device Emulator Wrapper -->
+<div class="fixed inset-0 bg-[#000000] flex items-center justify-center font-sans antialiased selection:bg-primary/30 transition-colors duration-500">
     <div class="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
 
-    <div class="w-full h-full sm:w-[420px] sm:h-[92vh] sm:rounded-[48px] bg-surface text-on-surface flex flex-col relative overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border-0 sm:border-[12px] sm:border-[#2A2829]">
+    <div class="w-full h-full sm:max-w-[420px] sm:h-[94vh] sm:rounded-[42px] bg-surface text-on-surface flex flex-col relative overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.4)] border-0 sm:border-[10px] sm:border-[#2A2829]">
+      <ToastContainer />
       
       {#if $currentRoute !== 'login' && $currentRoute !== 'register' && $isUIVisible}
         <TopBar />
@@ -65,7 +67,4 @@
     </div>
 </div>
 
-<svelte:head>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-</svelte:head>
+
