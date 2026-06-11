@@ -1,11 +1,13 @@
 /**
  * مسارات مطابقة لملفات `public/client/*Api.ts` المستّخرجة من عميل الخدمة.
- * البادئة: `${base}/marketplace/api/v1` — مصادقة Auth من جذر الخادم: `/Auth/...` (انظر `AuthApi.ts`).
+ * `apiClient` يضيف `VITE_API_BASE_URL`، وهي تضبط مسبقاً على `/api` في التطوير
+ * أو `https://host/marketplace/api/v1` في الإنتاج؛ لذلك تبقى المسارات هنا نسبية
+ * داخل v1 فقط حتى لا تتكرر البادئة.
  */
 
 import { apiClient } from './client';
 
-const V1 = '/marketplace/api/v1';
+const V1 = '';
 
 export type MarketplaceListParams = {
   PageSize?: number;
@@ -86,12 +88,10 @@ export const deleteCompany = (id: string | number) => deleteBare(`${V1}/Company/
 // ——— Customer ———
 export const getCustomers = (p?: MarketplaceListParams) => getBare(`${V1}/Customer${listQs(p)}`);
 export const createCustomer = (data: unknown) => postBare(`${V1}/Customer`, data);
-export const getCustomerSingle = (Id?: string | number, Type?: string) => {
-  const q = new URLSearchParams({
-    ...(Id !== undefined && Id !== '' ? { Id: String(Id) } : {}),
-    ...(Type !== undefined ? { Type: String(Type) } : {}),
-  }).toString();
-  return getBare(`${V1}/Customer/single${q ? `?${q}` : ''}`);
+export const getCustomerMyAccount = () => getBare(`${V1}/Customer/MyAccount`);
+export const getCustomerSingle = (Id?: string | number, _Type?: string) => {
+  if (Id === undefined || Id === '') return getCustomerMyAccount();
+  return getBare(`${V1}/Customer/${encodeURIComponent(String(Id))}`);
 };
 export const updateCustomer = (id: string | number, data: unknown) => putBare(`${V1}/Customer/${id}`, data);
 export const deleteCustomer = (id: string | number) => deleteBare(`${V1}/Customer/${id}`);

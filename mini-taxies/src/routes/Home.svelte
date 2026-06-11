@@ -6,16 +6,14 @@
     import { theme } from '../lib/stores/settingsStore';
     import { toast } from '../lib/stores/toastStore';
     import { onMount } from 'svelte';
-    import { userId, updateName } from '../lib/stores/authStore';
-    import { getCustomerSingle } from '../lib/api/marketplaceV1';
+    import { updateName } from '../lib/stores/authStore';
+    import { getCustomerMyAccount } from '../lib/api/marketplaceV1';
 
     let showSettings = false;
 
     async function loadLatestName() {
-        const id = get(userId);
-        if (!id) return;
         try {
-            const res: any = await getCustomerSingle(id);
+            const res: any = await getCustomerMyAccount();
             const rec = res?.data || res;
             if (rec) {
                 const fetchedName = rec.fullName || rec.FullName || rec.name;
@@ -156,4 +154,3 @@
         </div>
     </div>
 </div>
-

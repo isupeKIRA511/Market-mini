@@ -1,24 +1,23 @@
 <script lang="ts">
     import { get } from 'svelte/store';
     import { onMount } from 'svelte';
-    import { userId, userData, logout, updateName } from '../lib/stores/authStore';
+    import { userData, logout, updateName } from '../lib/stores/authStore';
     import { currentRoute } from '../lib/stores/navigationStore';
     import { theme } from '../lib/stores/settingsStore';
-    import { getCustomerSingle } from '../lib/api/marketplaceV1';
+    import { getCustomerMyAccount } from '../lib/api/marketplaceV1';
 
     let profileName = '';
     let profilePhone = '';
 
     async function loadProfile() {
-        const id = get(userId);
         const snap = get(userData);
-        if (!id) {
-            profileName = snap?.name ?? '';
+        if (!snap) {
+            profileName = '';
             profilePhone = '';
             return;
         }
         try {
-            const res: any = await getCustomerSingle(id);
+            const res: any = await getCustomerMyAccount();
             const rec = res?.data || res;
             if (rec) {
                 profileName = String(rec.fullName ?? rec.FullName ?? rec.name ?? snap?.name ?? 'مسافر');
@@ -80,6 +79,7 @@
             </div>
             
             <button 
+                aria-label="تبديل الوضع الليلي"
                 on:click={() => theme.update(t => t === 'dark' ? 'light' : 'dark')}
                 class="w-12 h-6 rounded-full relative transition-colors {$theme === 'dark' ? 'bg-primary' : 'bg-surface-container-high border border-outline-variant/20'}"
             >

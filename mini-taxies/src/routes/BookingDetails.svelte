@@ -11,6 +11,7 @@
     } from "../lib/api/rideOfferSearch";
     import { extractRideOfferGuidFromSearchRow } from "../lib/api/rideOfferGuid";
     import { extractRecordArray } from "../lib/api/marketplaceResponse";
+    import { expandProvinceSearchVariants } from "../lib/data/govNameVariants";
     import type { ApiGetManyResponse, RideOffersSearchFields } from "../lib/types/api";
 
     let selectedProvince = "";
@@ -31,6 +32,17 @@
         "مطار الناصرية الدولي",
         "مطار كركوك الدولي",
     ];
+
+    const airportProvinceByName: Record<string, string> = {
+        "مطار بغداد الدولي": "بغداد",
+        "مطار أربيل الدولي": "أربيل",
+        "مطار البصرة الدولي": "البصرة",
+        "مطار النجف الأشرف الدولي": "النجف",
+        "مطار السليمانية الدولي": "السليمانية",
+        "مطار الناصرية الدولي": "ذي قار",
+        "مطار كركوك الدولي": "كركوك",
+    };
+
     let selectedAirport = "";
 
     let pickupLocation: { lat: number; lng: number } | null = null;
@@ -64,7 +76,7 @@
             return;
         }
 
-        const airportProvince = selectedAirport;
+        const airportProvince = airportProvinceByName[selectedAirport] ?? "";
         if (!airportProvince) {
             toast.error("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
             return;
@@ -91,24 +103,37 @@
                 );
                 return;
             }
-            const qs = buildRideOfferSearchQueryString({
-                pickupProvince,
-                dropoffProvince,
-                seatCount: passengers,
-                oneTripOnly: true,
-                pageNum: 1,
-                pageSize: 20,
-            });
-            const res = await apiClient.get<ApiGetManyResponse<RideOffersSearchFields>>(
-                rideOfferSearchPath(qs),
-            );
-            const body = res.data;
-            const offers = extractRecordArray(body);
-            const first = offers[0] as unknown as RideOffersSearchFields | undefined;
-            const rideOfferId = extractRideOfferGuidFromSearchRow(first);
+            const pickupCandidates = expandProvinceSearchVariants(pickupProvince);
+            const dropoffCandidates = expandProvinceSearchVariants(dropoffProvince);
+            let foundOffersCount = 0;
+            let first: RideOffersSearchFields | undefined;
+            let rideOfferId: string | null | undefined;
+
+            searchLoop:
+            for (const pickup of pickupCandidates) {
+                for (const dropoff of dropoffCandidates) {
+                    const qs = buildRideOfferSearchQueryString({
+                        pickupProvince: pickup,
+                        dropoffProvince: dropoff,
+                        seatCount: passengers,
+                        oneTripOnly: true,
+                        pageNum: 1,
+                        pageSize: 20,
+                    });
+                    const res = await apiClient.get<ApiGetManyResponse<RideOffersSearchFields>>(
+                        rideOfferSearchPath(qs),
+                    );
+                    const offers = extractRecordArray(res.data);
+                    foundOffersCount += offers.length;
+                    first = offers[0] as unknown as RideOffersSearchFields | undefined;
+                    rideOfferId = extractRideOfferGuidFromSearchRow(first);
+                    if (rideOfferId) break searchLoop;
+                }
+            }
+
             if (!rideOfferId) {
                 toast.error(
-                    offers.length === 0
+                    foundOffersCount === 0
                         ? `لا توجد رحلات متاحة من ${pickupProvince} إلى ${dropoffProvince} حالياً. جرّب لاحقاً.`
                         : "استجابة البحث لا تتضمن معرّف عرض صالح (GUID) في الحقول المعروفة.",
                 );
@@ -552,13 +577,3 @@
         </p>
     </div>
 </div>
-
-<style>
-    .hide-scrollbar::-webkit-scrollbar {
-        display: none;
-    }
-    .hide-scrollbar {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-    }
-</style>
