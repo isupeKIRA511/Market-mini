@@ -14,10 +14,19 @@
 
     const getColorClass = (type: string) => {
         switch (type) {
-            case 'success': return 'border-green-500/20 bg-green-500/10 text-green-500';
-            case 'error': return 'border-red-500/20 bg-red-500/10 text-red-500';
-            case 'warning': return 'border-yellow-500/20 bg-yellow-500/10 text-yellow-500';
-            default: return 'border-primary/20 bg-primary/10 text-primary';
+            case 'success': return 'border-[#10B981]/25 bg-[#ECFDF5]/95 text-[#065F46]';
+            case 'error': return 'border-error/25 bg-error-container/95 text-on-error-container';
+            case 'warning': return 'border-[#F59E0B]/25 bg-[#FFFBEB]/95 text-[#78350F]';
+            default: return 'border-primary/25 bg-surface/95 text-on-surface';
+        }
+    };
+
+    const getAccentClass = (type: string) => {
+        switch (type) {
+            case 'success': return 'bg-[#10B981]';
+            case 'error': return 'bg-error';
+            case 'warning': return 'bg-[#F59E0B]';
+            default: return 'bg-primary';
         }
     };
 </script>
@@ -28,17 +37,20 @@
             animate:flip={{ duration: 300 }}
             in:fly={{ y: -20, opacity: 0, duration: 300 }}
             out:fly={{ y: -20, opacity: 0, duration: 200 }}
-            class="flex items-center gap-3 p-3.5 rounded-2xl border backdrop-blur-xl shadow-2xl pointer-events-auto {getColorClass(t.type)}"
+            class="relative overflow-hidden flex items-center gap-3 p-3.5 rounded-[22px] border backdrop-blur-xl shadow-2xl pointer-events-auto {getColorClass(t.type)}"
         >
-            <span class="material-symbols-outlined text-[20px] shrink-0" style="font-variation-settings: 'FILL' 1;">
-                {getIcon(t.type)}
+            <div class="absolute inset-x-0 top-0 h-1 {getAccentClass(t.type)}"></div>
+            <span class="flex h-8 w-8 items-center justify-center rounded-2xl text-white shrink-0 {getAccentClass(t.type)}">
+                <span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">
+                    {getIcon(t.type)}
+                </span>
             </span>
             <p class="text-xs font-bold text-right flex-1 leading-relaxed">
                 {t.message}
             </p>
             <button 
                 on:click={() => toast.dismiss(t.id)}
-                class="w-6 h-6 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
+                class="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 transition-colors"
                 aria-label="اغلاق"
             >
                 <span class="material-symbols-outlined text-[16px] opacity-60">close</span>

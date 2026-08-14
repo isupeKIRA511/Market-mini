@@ -5,6 +5,13 @@
   import type { AuthResponse } from "../lib/types/api";
   import { apiClient } from "../lib/api/client";
   import { extractAuthResponse } from "../lib/api/extractAuthResponse";
+  import AppAlert from "../lib/components/AppAlert.svelte";
+  import {
+    isValidIraqiMobilePhone,
+    isValidOtpCode,
+    normalizeOtp,
+    normalizePhone,
+  } from "../lib/phone/normalize";
 
   let fullName = "";
   let phoneNumber = "";
@@ -16,35 +23,8 @@
   let isConfirming = false;
   let otpRequested = false;
 
-  function normalizePhone(raw: string): string {
-    if (!raw) return "";
-    let s = raw.replace(/\s+/g, "").trim();
-
-    // If it starts with 00 (international zeroes) -> +...
-    if (s.startsWith("00")) {
-      s = "+" + s.slice(2);
-    }
-
-    // Local Iraqi numbers starting with 0 => convert to +964
-    // e.g. 07701234567 -> +9647701234567
-    if (/^0\d{8,}$/.test(s)) {
-      s = "+964" + s.slice(1);
-    }
-
-    // If it starts with 964 without +, add +
-    if (/^964\d+/.test(s)) {
-      s = "+" + s;
-    }
-
-    // Ensure it starts with + if looks like international
-    if (!s.startsWith("+") && /^\d+$/.test(s)) {
-      s = "+" + s;
-    }
-
-    return s;
-  }
-
   $: normalizedPhone = normalizePhone(phoneNumber);
+  $: normalizedOtp = normalizeOtp(otp);
 
   function handleRegisterAttempt() {
     errorMsg = "";
@@ -54,8 +34,8 @@
       return;
     }
 
-    if (!normalizedPhone) {
-      errorMsg = "يرجى إدخال رقم الجوال";
+    if (!isValidIraqiMobilePhone(normalizedPhone)) {
+      errorMsg = "يرجى إدخال رقم جوال عراقي صحيح مثل 07701234567";
       return;
     }
 
@@ -75,7 +55,9 @@
           phoneNumber: normalizedPhone,
         });
       } catch (regErr: unknown) {
-        console.warn("تسجيل العميل قبل OTP:", regErr);
+        if (import.meta.env.DEV) {
+          console.warn("تعذر تسجيل العميل قبل OTP:", regErr instanceof Error ? regErr.message : regErr);
+        }
       }
       await apiClient.post("/Auth/customer/request-otp", {
         phoneNumber: normalizedPhone,
@@ -101,8 +83,8 @@
     if (loading) return;
     errorMsg = "";
 
-    if (!otp) {
-      errorMsg = "يرجى إدخال رمز التحقق";
+    if (!isValidOtpCode(normalizedOtp)) {
+      errorMsg = "يرجى إدخال رمز تحقق رقمي صحيح";
       return;
     }
 
@@ -113,7 +95,7 @@
         "/Auth/customer/verify-otp",
         {
           phoneNumber: normalizedPhone,
-          otp,
+          otp: normalizedOtp,
         },
       );
 
@@ -129,7 +111,9 @@
             phoneNumber: normalizedPhone,
           });
         } catch (updateErr) {
-          console.error("Failed to update name:", updateErr);
+          if (import.meta.env.DEV) {
+            console.error("Failed to update name:", updateErr instanceof Error ? updateErr.message : updateErr);
+          }
           // We can just ignore and proceed to home, they can edit it later
         }
 
@@ -184,12 +168,7 @@
     class="bg-surface-container-lowest rounded-[28px] p-5 border border-outline-variant/15 shadow-sm space-y-4 relative overflow-hidden"
   >
     {#if errorMsg}
-      <div
-        class="bg-error-container/80 border border-error/20 text-on-error-container text-[11px] font-semibold p-3.5 rounded-2xl text-right"
-        role="alert"
-      >
-        {errorMsg}
-      </div>
+      <AppAlert type="error" title="تعذر إنشاء الحساب" message={errorMsg} />
     {/if}
 
     {#if !otpRequested}
@@ -213,6 +192,8 @@
             <input
               id="reg-name"
               type="text"
+              autocomplete="name"
+              maxlength="80"
               bind:value={fullName}
               on:keydown={onKeydown}
               disabled={isConfirming || otpRequested}
@@ -237,6 +218,8 @@
               id="reg-phone"
               type="tel"
               inputmode="tel"
+              autocomplete="tel"
+              maxlength="17"
               bind:value={phoneNumber}
               on:keydown={onKeydown}
               disabled={isConfirming || otpRequested}
@@ -351,6 +334,9 @@
               id="reg-otp"
               type="text"
               inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="8"
+              pattern="[0-9]*"
               bind:value={otp}
               on:keydown={onKeydown}
               placeholder="أدخل الرمز المكون من 6 أرقام"

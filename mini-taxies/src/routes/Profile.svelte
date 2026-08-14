@@ -21,18 +21,18 @@
             const rec = res?.data || res;
             if (rec) {
                 profileName = String(rec.fullName ?? rec.FullName ?? rec.name ?? snap?.name ?? 'مسافر');
-                profilePhone = String(rec.phoneNumber ?? rec.PhoneNumber ?? snap?.name ?? '');
+                profilePhone = String(rec.phoneNumber ?? rec.PhoneNumber ?? '');
                 // Sync the name to the store if it's different
                 if (profileName && profileName !== snap?.name) {
                     updateName(profileName);
                 }
             } else {
                 profileName = snap?.name ?? 'مسافر';
-                profilePhone = snap?.name ?? '';
+                profilePhone = '';
             }
         } catch {
             profileName = snap?.name ?? 'مسافر';
-            profilePhone = snap?.name ?? '';
+            profilePhone = '';
         }
     }
 

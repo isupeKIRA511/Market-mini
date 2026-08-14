@@ -31,7 +31,9 @@ async function handleResponse<T>(response: Response): Promise<{ data: T; status:
     }
   }
   if (!response.ok) {
-    console.error('API Error:', data ?? response.statusText);
+    if (import.meta.env.DEV) {
+      console.error('API Error:', response.status, response.statusText);
+    }
     let message = response.statusText;
     if (typeof data === 'string') {
       message = data;

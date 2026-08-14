@@ -5,6 +5,13 @@
   import type { AuthResponse } from '../lib/types/api';
   import { apiClient } from '../lib/api/client';
   import { extractAuthResponse } from '../lib/api/extractAuthResponse';
+  import AppAlert from '../lib/components/AppAlert.svelte';
+  import {
+    isValidIraqiMobilePhone,
+    isValidOtpCode,
+    normalizeOtp,
+    normalizePhone,
+  } from '../lib/phone/normalize';
 
   let phoneNumber = '';
   let otp = '';
@@ -12,38 +19,51 @@
   let errorMsg = '';
   let otpRequested = false;
 
-  function normalizePhone(raw: string): string {
-    if (!raw) return '';
-    let s = raw.replace(/\s+/g, '').trim();
-    if (s.startsWith('00')) s = '+' + s.slice(2);
-    if (/^0\d{8,}$/.test(s)) s = '+964' + s.slice(1);
-    if (/^964\d+/.test(s)) s = '+' + s;
-    if (!s.startsWith('+') && /^\d+$/.test(s)) s = '+' + s;
-    return s;
-  }
-
   $: normalizedPhone = normalizePhone(phoneNumber);
+  $: normalizedOtp = normalizeOtp(otp);
 
   async function handleRequestOtp() {
     if (loading) return;
     errorMsg = '';
 
-    if (!normalizedPhone) {
-      errorMsg = 'يرجى إدخال رقم الجوال';
+    if (!isValidIraqiMobilePhone(normalizedPhone)) {
+      errorMsg = 'يرجى إدخال رقم جوال عراقي صحيح مثل 07701234567';
       return;
     }
 
     loading = true;
     try {
-      await apiClient.post('/Auth/customer/request-otp', { phoneNumber: normalizedPhone });
+      // إرسال كلاً من PascalCase و camelCase لتوافق الخادم
+      await apiClient.post('/Auth/customer/request-otp', {
+        phoneNumber: normalizedPhone,
+        PhoneNumber: normalizedPhone
+      });
       otpRequested = true;
     } catch (err: any) {
+      // في حال عدم تسجيل الرقم مسبقاً على السيرفر، يتم إنشاء الحساب تلقائياً ثم طلب OTP
+      try {
+        await apiClient.post('/Customer/register', {
+          fullName: 'عميل',
+          phoneNumber: normalizedPhone,
+          PhoneNumber: normalizedPhone
+        });
+        await apiClient.post('/Auth/customer/request-otp', {
+          phoneNumber: normalizedPhone,
+          PhoneNumber: normalizedPhone
+        });
+        otpRequested = true;
+        return;
+      } catch {
+        // التجاهل ومتابعة معالجة الخطأ الأساسية
+      }
+
       const raw = err?.response?.data;
-      const hint =
-        typeof raw === 'string' && raw.toLowerCase().includes('not_found')
-          ? 'هذا الرقم غير مسجّل. أنشئ حساباً من «إنشاء حساب جديد» ثم أرسل رمز التحقق.'
-          : err?.message || 'تعذّر إرسال رمز التحقق';
-      errorMsg = hint;
+      const msg = typeof raw === 'object' && raw !== null && 'message' in raw
+        ? String((raw as { message?: string }).message)
+        : typeof raw === 'string'
+        ? raw
+        : err?.message;
+      errorMsg = msg || 'تعذّر إرسال رمز التحقق. تأكد من اتصال النت وصحة الرقم.';
     } finally {
       loading = false;
     }
@@ -53,8 +73,8 @@
     if (loading) return;
     errorMsg = '';
 
-    if (!otp) {
-      errorMsg = 'يرجى إدخال رمز التحقق';
+    if (!isValidOtpCode(normalizedOtp)) {
+      errorMsg = 'يرجى إدخال رمز تحقق رقمي صحيح (4-8 أرقام)';
       return;
     }
 
@@ -62,18 +82,35 @@
     try {
       const res = await apiClient.post<AuthResponse>('/Auth/customer/verify-otp', {
         phoneNumber: normalizedPhone,
-        otp
+        PhoneNumber: normalizedPhone,
+        otp: normalizedOtp,
+        Otp: normalizedOtp
       });
       
       const auth = extractAuthResponse(res.data);
-      if (auth && auth.token && auth.id) {
+      if (auth && auth.token) {
         setAuthData(auth);
+        try {
+          const accRes = await apiClient.get<any>('/Customer/MyAccount');
+          const accName = accRes?.data?.fullName || accRes?.fullName || accRes?.data?.name;
+          if (accName) {
+            setAuthData(auth, accName);
+          }
+        } catch {
+          // الاحتفاظ بالاسم المستخرج تلقائياً
+        }
         goto('home');
       } else {
-        errorMsg = 'رمز التحقق غير صحيح استجاب الخادم بمعلومات غير صالحة';
+        errorMsg = 'تم قبول الرمز ولكن استجاب الخادم بتنسيق توكن غير معروف.';
       }
     } catch (err: any) {
-      errorMsg = err.message || 'رمز التحقق غير صحيح';
+      const raw = err?.response?.data;
+      const msg = typeof raw === 'object' && raw !== null && 'message' in raw
+        ? String((raw as { message?: string }).message)
+        : typeof raw === 'string'
+        ? raw
+        : err?.message;
+      errorMsg = msg || 'رمز التحقق غير صحيح أو انتهت صلاحيته.';
     } finally {
       loading = false;
     }
@@ -110,12 +147,7 @@
     class="bg-surface-container-lowest rounded-[28px] p-5 border border-outline-variant/15 shadow-sm space-y-4"
   >
     {#if errorMsg}
-      <div
-        class="bg-error-container/80 border border-error/20 text-on-error-container text-[11px] font-semibold p-3.5 rounded-2xl text-right"
-        role="alert"
-      >
-        {errorMsg}
-      </div>
+      <AppAlert type="error" title="تعذر تسجيل الدخول" message={errorMsg} />
     {/if}
 
     <div class="space-y-1.5">
@@ -130,7 +162,8 @@
           id="login-phone"
           type="tel"
           inputmode="tel"
-          autocomplete="username"
+          autocomplete="tel"
+          maxlength="17"
           bind:value={phoneNumber}
           on:keydown={onKeydown}
           disabled={otpRequested}
@@ -158,6 +191,9 @@
           id="login-otp"
           type="text"
           inputmode="numeric"
+          autocomplete="one-time-code"
+          maxlength="8"
+          pattern="[0-9]*"
           bind:value={otp}
           on:keydown={onKeydown}
           placeholder="أدخل الرمز المكون من 6 أرقام"

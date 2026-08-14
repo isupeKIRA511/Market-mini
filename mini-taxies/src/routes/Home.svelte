@@ -2,16 +2,15 @@
     import { get } from 'svelte/store';
     import { currentRoute } from '../lib/stores/navigationStore';
     import { bookingStore } from '../lib/stores/bookingStore';
-    import { userData } from '../lib/stores/authStore';
-    import { theme } from '../lib/stores/settingsStore';
-    import { toast } from '../lib/stores/toastStore';
+    import { serverToken, userData } from '../lib/stores/authStore';
     import { onMount } from 'svelte';
     import { updateName } from '../lib/stores/authStore';
     import { getCustomerMyAccount } from '../lib/api/marketplaceV1';
-
-    let showSettings = false;
+    import VipCarGraphic from '../lib/components/VipCarGraphic.svelte';
 
     async function loadLatestName() {
+        if (!get(serverToken)) return;
+
         try {
             const res: any = await getCustomerMyAccount();
             const rec = res?.data || res;
@@ -36,39 +35,89 @@
         currentRoute.set('booking-details');
     }
 
-    const homeOffers = [
+    function navigateToIntercity() {
+        bookingStore.update(b => ({ ...b, serviceType: 'Inter-city' }));
+        currentRoute.set('marketplace');
+    }
+
+    const homeBanners = [
         {
-            badge: 'خصم 20%',
-            title: 'رحلات المطار لرجال الأعمال',
-            desc: 'احجز سيارة فاخرة الآن واحصل على خصم فوري لرحلتك القادمة.',
-            variant: 'gold',
+            subtitle: 'خدمة VIP للمسافرين',
+            title: 'استقبال راقي ومباشر من صالة المطار',
+            icon: 'airport_shuttle',
+            action: 'احجز VIP الآن',
+            route: 'From Airport',
+            bgClass: 'bg-gradient-to-br from-[#121217] via-[#1D1B1C] to-[#2A272A] border-white/15 text-white',
+            glowClass: 'bg-primary/25',
+            subTitleClass: 'text-primary',
+            titleClass: 'text-white',
+            iconBoxClass: 'bg-white/10 border-white/15 text-primary',
+            btnClass: 'bg-primary text-on-primary',
         },
         {
-            badge: 'مجاناً',
-            title: 'توصيل أول رحلة',
-            desc: 'للمشتركين الجدد، أول رحلة مجانية تماماً.',
-        }
+            subtitle: 'رحلات بين المحافظات',
+            title: 'سفر آمن وسريع بين جميع مدن العراق',
+            icon: 'route',
+            action: 'استكشف العروض',
+            route: 'marketplace',
+            bgClass: 'bg-gradient-to-br from-[#064E3B] via-[#047857] to-[#10B981] border-[#34D399]/30 text-white',
+            glowClass: 'bg-white/20',
+            subTitleClass: 'text-[#A7F3D0]',
+            titleClass: 'text-white',
+            iconBoxClass: 'bg-white/15 border-white/20 text-white',
+            btnClass: 'bg-white text-[#064E3B]',
+        },
+        {
+            subtitle: 'خصم خاص 20%',
+            title: 'احصل على خصم بقيمة 20% بكود AIRPORT20',
+            icon: 'local_activity',
+            action: 'استخدم الخصم',
+            route: 'From Airport',
+            bgClass: 'bg-gradient-to-br from-[#B45309] via-[#D97706] to-[#FAC445] border-white/20 text-white',
+            glowClass: 'bg-white/30',
+            subTitleClass: 'text-[#FEF3C7]',
+            titleClass: 'text-white',
+            iconBoxClass: 'bg-black/20 border-white/20 text-white',
+            btnClass: 'bg-[#1D1B1C] text-white',
+        },
+        {
+            subtitle: 'سائقون معتمدون 100%',
+            title: 'قيّم رحلتك وشاركنا تجربتك لخدمة أفضل',
+            icon: 'verified',
+            action: 'عرض السجل',
+            route: 'history',
+            bgClass: 'bg-gradient-to-br from-[#312E81] via-[#4338CA] to-[#6366F1] border-white/20 text-white',
+            glowClass: 'bg-white/20',
+            subTitleClass: 'text-[#C7D2FE]',
+            titleClass: 'text-white',
+            iconBoxClass: 'bg-white/15 border-white/20 text-white',
+            btnClass: 'bg-white text-[#312E81]',
+        },
     ];
+
+    function handleBannerAction(route: string) {
+        if (route === 'From Airport') {
+            navigateToBooking('From Airport');
+            return;
+        }
+        if (route === 'marketplace') {
+            navigateToIntercity();
+            return;
+        }
+        if (route === 'history') {
+            currentRoute.set('history');
+        }
+    }
 
     $: greetingName = $userData?.name || 'مسافر';
 </script>
 
 <div class="relative min-h-full pb-6">
-    <!-- Abstract Dynamic Background (Map feel) -->
-    <div class="absolute inset-x-[-20px] top-[-100px] h-64 opacity-[0.03] pointer-events-none z-0 overflow-hidden" dir="ltr">
-        <svg width="100%" height="100%" viewBox="0 0 800 400" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 50H800M0 150H800M0 250H800M0 350H800M100 0V400M300 0V400M500 0V400M700 0V400" stroke="currentColor" stroke-width="2"/>
-            <circle cx="200" cy="200" r="100" stroke="currentColor" stroke-width="2"/>
-            <circle cx="600" cy="100" r="50" stroke="currentColor" stroke-width="2"/>
-        </svg>
-    </div>
-
     <!-- 1. Header Section -->
-    <div class="relative z-10 mb-10 pt-2">
+    <div class="relative z-10 mb-6 pt-2">
         <div class="flex justify-between items-center flex-row-reverse">
             <div class="text-right">
-                <h1 class="text-[26px] font-black text-on-surface tracking-tight">أهلاً بك، {greetingName}</h1>
-                <p class="text-on-surface-variant text-[12px] font-bold mt-1">أين تود الذهاب اليوم؟</p>
+                <h1 class="text-[26px] font-black text-on-surface tracking-tight">{greetingName}</h1>
             </div>
             <div class="w-14 h-14 rounded-2xl bg-surface-container-high border-2 border-primary/20 flex items-center justify-center overflow-hidden shadow-sm">
                 <span class="material-symbols-outlined text-primary text-[32px]" style="font-variation-settings: 'FILL' 1;">person</span>
@@ -119,7 +168,7 @@
             <button
                 type="button"
                 class="bg-surface-container-lowest hover:bg-surface-container-low transition-all rounded-[26px] p-5 text-right items-end flex flex-col justify-between h-40 border border-outline-variant/10 shadow-sm cursor-pointer active:scale-[0.98]"
-                on:click={() => currentRoute.set('marketplace')}
+                on:click={navigateToIntercity}
             >
                 <div class="w-12 h-12 bg-green-50 rounded-2xl flex items-center justify-center shrink-0 border border-green-100 mb-4">
                     <span class="material-symbols-outlined text-[#10B981] text-3xl" style="font-variation-settings: 'FILL' 1;">distance</span>
@@ -133,23 +182,47 @@
     </div>
 
 
-    <!-- Offers Section -->
+    <!-- Banners Section -->
     <div class="mt-10 relative z-10">
         <div class="flex justify-between items-center mb-4 flex-row-reverse text-right px-1">
-             <h3 class="text-base font-black text-on-surface">العروض الحصرية</h3>
-             <button class="text-primary font-bold text-[10px] hover:underline">عرض الكل</button>
+             <h3 class="text-base font-black text-on-surface">مختارات الرحلة</h3>
+             <span class="text-primary font-bold text-[10px]">مصممة للمسافر</span>
         </div>
         
         <div class="flex flex-row gap-4 overflow-x-auto pb-4 pt-1 -mx-5 px-5 snap-x no-scrollbar">
-            {#each homeOffers as offer}
-                <div class="min-w-[260px] {offer.variant === 'gold' ? 'bg-gradient-to-l from-primary-container to-[#fde08b]' : 'bg-gradient-to-l from-[#1D1B1C] to-[#383637]'} rounded-[24px] p-5 text-right relative overflow-hidden shadow-sm shrink-0 snap-center cursor-pointer active:scale-[0.98] transition-transform">
-                    <div class="absolute -left-8 -top-8 w-24 h-24 {offer.variant === 'gold' ? 'bg-white/40' : 'bg-primary/20'} rounded-full blur-[30px] pointer-events-none"></div>
-                    <div class="relative z-10 w-full {offer.variant === 'gold' ? 'text-[#312B1B]' : 'text-white'}" dir="rtl">
-                        <span class="{offer.variant === 'gold' ? 'bg-white text-[#312B1B]' : 'bg-primary text-[#1D1B1C]'} text-[9px] font-black px-3 py-1 rounded-full mb-3 inline-block shadow-sm">{offer.badge}</span>
-                        <h4 class="text-[14px] font-black mb-1">{offer.title}</h4>
-                        <p class="opacity-80 text-[10px] font-bold leading-relaxed">{offer.desc}</p>
+            {#each homeBanners as banner}
+                <button
+                    type="button"
+                    on:click={() => handleBannerAction(banner.route)}
+                    class="w-[310px] min-w-[310px] max-w-[310px] h-[160px] rounded-[28px] p-5 text-right relative overflow-hidden shadow-md shrink-0 snap-center active:scale-[0.98] transition-all duration-300 border flex flex-col justify-between cursor-pointer {banner.bgClass}"
+                >
+                    <!-- Background Shine & Glow -->
+                    <div class="absolute -right-8 -top-8 w-32 h-32 rounded-full blur-2xl pointer-events-none {banner.glowClass}"></div>
+                    
+                    <div class="relative z-10 flex justify-between items-start w-full gap-3" dir="rtl">
+                        <div class="flex flex-col text-right max-w-[70%]">
+                            <span class="text-[10px] font-black tracking-wide mb-1.5 opacity-90 {banner.subTitleClass}">{banner.subtitle}</span>
+                            <h4 class="text-[16px] font-black leading-tight mb-1 {banner.titleClass}">{banner.title}</h4>
+                        </div>
+
+                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border shadow-sm relative {banner.iconBoxClass}">
+                            {#if banner.route === 'From Airport'}
+                                <div class="w-full flex justify-center">
+                                    <VipCarGraphic compact />
+                                </div>
+                            {:else}
+                                <span class="material-symbols-outlined text-[28px]" style="font-variation-settings: 'FILL' 1;">{banner.icon}</span>
+                            {/if}
+                        </div>
                     </div>
-                </div>
+
+                    <div class="relative z-10 flex justify-start mt-auto pt-2" dir="rtl">
+                        <span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[11px] font-black shadow-md transition-transform hover:scale-105 active:scale-95 {banner.btnClass}">
+                            {banner.action}
+                            <span class="material-symbols-outlined rotate-180 text-[14px]">arrow_back</span>
+                        </span>
+                    </div>
+                </button>
             {/each}
         </div>
     </div>

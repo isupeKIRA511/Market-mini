@@ -11,9 +11,20 @@ export interface BookingDetails {
     dropoffProvince?: string;
     searchSeatCount?: number;
     rideOfferId?: string;
-    carType?: string;
+    carType?: 'standard' | 'vip' | 'sedan' | 'suv' | 'van' | 'special' | string;
     bookingId?: string;
     airport?: string;
     dropoffLocation?: string;
+    pickupLatitude?: number;
+    pickupLongitude?: number;
+    homeLatitude?: number;
+    homeLongitude?: number;
+    airportLatitude?: number;
+    airportLongitude?: number;
+    homeToAirport?: boolean;
+    companyId?: string;
+    companyName?: string;
     price?: number;
+    vipPassengerCapacity?: number;
+    vipLuggageCapacity?: number;
 }

@@ -3,25 +3,10 @@
     import { bookingStore } from "../lib/stores/bookingStore";
     import { toast } from "../lib/stores/toastStore";
     import LeafletMap from "../lib/components/LeafletMap.svelte";
-    import { apiClient } from "../lib/api/client";
-    import {
-        buildRideOfferSearchQueryString,
-        hasTokenForRideOfferSearch,
-        rideOfferSearchPath,
-    } from "../lib/api/rideOfferSearch";
-    import { extractRideOfferGuidFromSearchRow } from "../lib/api/rideOfferGuid";
-    import { extractRecordArray } from "../lib/api/marketplaceResponse";
-    import { expandProvinceSearchVariants } from "../lib/data/govNameVariants";
-    import type { ApiGetManyResponse, RideOffersSearchFields } from "../lib/types/api";
+    import { governorates } from "../lib/data/governorates";
+    import { calculateMapDynamicPrice } from "../lib/booking/display";
 
     let selectedProvince = "";
-    const governorates = [
-        "بغداد", "البصرة", "نينوى", "أربيل", "النجف", "ذي قار", "كركوك", 
-        "الأنبار", "ديالى", "المثنى", "القادسية", "ميسان", "واسط", 
-        "صلاح الدين", "دهوك", "السليمانية", "بابل", "كربلاء"
-    ];
-
-    let continueLoading = false;
 
     const iraqiAirports: string[] = [
         "مطار بغداد الدولي",
@@ -41,6 +26,16 @@
         "مطار السليمانية الدولي": "السليمانية",
         "مطار الناصرية الدولي": "ذي قار",
         "مطار كركوك الدولي": "كركوك",
+    };
+
+    const airportCoordinatesByName: Record<string, { lat: number; lng: number }> = {
+        "مطار بغداد الدولي": { lat: 33.2625, lng: 44.2346 },
+        "مطار أربيل الدولي": { lat: 36.2376, lng: 43.9632 },
+        "مطار البصرة الدولي": { lat: 30.5491, lng: 47.6621 },
+        "مطار النجف الأشرف الدولي": { lat: 31.9917, lng: 44.4042 },
+        "مطار السليمانية الدولي": { lat: 35.5608, lng: 45.3147 },
+        "مطار الناصرية الدولي": { lat: 30.9358, lng: 46.0901 },
+        "مطار كركوك الدولي": { lat: 35.4697, lng: 44.3489 },
     };
 
     let selectedAirport = "";
@@ -76,18 +71,32 @@
             return;
         }
 
+        const homeLocation = pickupLocation;
         const airportProvince = airportProvinceByName[selectedAirport] ?? "";
         if (!airportProvince) {
             toast.error("تعذّر ربط المطار بمحافظة معروفة للبحث عن عروض الرحلات.");
             return;
         }
 
+        const airportCoords = airportCoordinatesByName[selectedAirport];
+        if (!airportCoords) {
+            toast.error("تعذّر تحديد إحداثيات المطار المطلوبة لإنشاء الحجز.");
+            return;
+        }
+
         const isToAirport = $bookingStore.serviceType === "To Airport";
         const pickupProvince = isToAirport ? selectedProvince : airportProvince;
         const dropoffProvince = isToAirport ? airportProvince : selectedProvince;
+        const homeText = `${selectedProvince} (${homeLocation.lat.toFixed(6)}, ${homeLocation.lng.toFixed(6)})`;
+        const airportText = `${selectedAirport} - ${airportProvince}`;
+        const pickupText = isToAirport ? homeText : airportText;
+        const dropoffText = isToAirport ? airportText : homeText;
+        const bookingLatitude = isToAirport ? homeLocation.lat : airportCoords.lat;
+        const bookingLongitude = isToAirport ? homeLocation.lng : airportCoords.lng;
 
         const payload = {
-            pickupLocation: `${pickupLocation?.lat}, ${pickupLocation?.lng}`,
+            pickupLocation: pickupText,
+            dropoffLocation: dropoffText,
             airport: selectedAirport,
             flightNumber: flightNumber,
             passengersCount: passengers,
@@ -95,69 +104,34 @@
             dateTime: `${dateInput} ${timeInput}`,
         };
 
-        continueLoading = true;
-        try {
-            if (!hasTokenForRideOfferSearch()) {
-                toast.error(
-                    "يجب تسجيل الدخول أولاً. طلب RideOffer/Search يتطلّب Authorization: Bearer كما في واجهة الـ API.",
-                );
-                return;
-            }
-            const pickupCandidates = expandProvinceSearchVariants(pickupProvince);
-            const dropoffCandidates = expandProvinceSearchVariants(dropoffProvince);
-            let foundOffersCount = 0;
-            let first: RideOffersSearchFields | undefined;
-            let rideOfferId: string | null | undefined;
+        const dynamicPricing = calculateMapDynamicPrice(
+            homeLocation.lat,
+            homeLocation.lng,
+            airportCoords.lat,
+            airportCoords.lng
+        );
 
-            searchLoop:
-            for (const pickup of pickupCandidates) {
-                for (const dropoff of dropoffCandidates) {
-                    const qs = buildRideOfferSearchQueryString({
-                        pickupProvince: pickup,
-                        dropoffProvince: dropoff,
-                        seatCount: passengers,
-                        oneTripOnly: true,
-                        pageNum: 1,
-                        pageSize: 20,
-                    });
-                    const res = await apiClient.get<ApiGetManyResponse<RideOffersSearchFields>>(
-                        rideOfferSearchPath(qs),
-                    );
-                    const offers = extractRecordArray(res.data);
-                    foundOffersCount += offers.length;
-                    first = offers[0] as unknown as RideOffersSearchFields | undefined;
-                    rideOfferId = extractRideOfferGuidFromSearchRow(first);
-                    if (rideOfferId) break searchLoop;
-                }
-            }
+        bookingStore.update((b) => ({
+            ...b,
+            ...payload,
+            rideOfferId: undefined,
+            pickupProvince,
+            dropoffProvince,
+            searchSeatCount: passengers,
+            pickupLatitude: bookingLatitude,
+            pickupLongitude: bookingLongitude,
+            homeLatitude: homeLocation.lat,
+            homeLongitude: homeLocation.lng,
+            airportLatitude: airportCoords.lat,
+            airportLongitude: airportCoords.lng,
+            homeToAirport: isToAirport,
+            companyId: undefined,
+            companyName: undefined,
+            price: dynamicPricing.price,
+            bookingId: undefined,
+        }));
 
-            if (!rideOfferId) {
-                toast.error(
-                    foundOffersCount === 0
-                        ? `لا توجد رحلات متاحة من ${pickupProvince} إلى ${dropoffProvince} حالياً. جرّب لاحقاً.`
-                        : "استجابة البحث لا تتضمن معرّف عرض صالح (GUID) في الحقول المعروفة.",
-                );
-                return;
-            }
-
-            bookingStore.update((b) => ({
-                ...b,
-                ...payload,
-                rideOfferId,
-                pickupProvince,
-                dropoffProvince,
-                searchSeatCount: passengers,
-                price: typeof first?.price === "number" ? first.price : b.price,
-                bookingId: undefined,
-            }));
-
-            currentRoute.set("select-car");
-        } catch (error: unknown) {
-            const msg = error instanceof Error ? error.message : "خطأ غير معروف";
-            toast.error(`تعذّر جلب عرض الرحلة: ${msg}`);
-        } finally {
-            continueLoading = false;
-        }
+        currentRoute.set("select-car");
     }
 
     function onLocationSelected(e: any) {
@@ -554,21 +528,15 @@
     <div class="pt-2 w-full">
         <button
             type="button"
-            disabled={continueLoading}
             on:click={handleContinue}
             class="w-full btn-premium py-5 text-lg {!selectedAirport ||
             !pickupLocation ||
-            continueLoading
+            !selectedProvince
                 ? 'opacity-50 cursor-not-allowed border border-outline-variant/20 shadow-none grayscale filter'
                 : ''}"
         >
-            {#if continueLoading}
-                <span class="material-symbols-outlined text-[20px] animate-spin">progress_activity</span>
-                <span>جاري البحث عن رحلة…</span>
-            {:else}
-                <span>متابعة لاختيار المركبة</span>
-                <span class="material-symbols-outlined text-[20px] font-bold">arrow_back</span>
-            {/if}
+            <span>متابعة لاختيار المركبة</span>
+            <span class="material-symbols-outlined text-[20px] font-bold">arrow_back</span>
         </button>
         <p
             class="text-center text-on-surface-variant text-[10px] mt-4 opacity-80 font-medium"

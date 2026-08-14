@@ -10,11 +10,10 @@
         case 'home': return 'الرئيسية';
         case 'marketplace': return 'سوق سيارات الأجرة';
         case 'booking-details': return 'تفاصيل الحجز';
-        case 'select-car': return 'اختر نوع السيارة';
+        case 'select-car': return 'خدمة المطار';
         case 'payment': return 'الدفع وتأكيد الحجز';
-        case 'history': return 'تتبع الرحلة';
-        case 'profile': return 'الحساب الشخصي';
         case 'history': return 'سجل الرحلات';
+        case 'profile': return 'الحساب الشخصي';
         default: return 'الرئيسية';
     }
   }
@@ -36,7 +35,7 @@
   }
 </script>
 
-<header class="bg-surface flex flex-row-reverse justify-between items-center w-full px-5 py-5 absolute top-0 left-0 z-50">
+<header class="bg-surface/92 backdrop-blur-xl flex flex-row-reverse justify-between items-center w-full px-5 py-5 absolute top-0 left-0 z-50 border-b border-outline-variant/10">
     <div></div>
     
     <div class="flex items-center gap-4">

@@ -5,10 +5,14 @@
   import { get } from 'svelte/store';
   import { bookingStore } from '../lib/stores/bookingStore';
   import { apiClient } from '../lib/api/client';
+  import { createAirportBooking } from '../lib/api/bookings';
   import { isRideOfferGuid, normalizeRideOfferGuidString } from '../lib/api/rideOfferGuid';
   import { resolveRideOfferIdFromSearch } from '../lib/api/resolveRideOfferId';
   import { toast } from '../lib/stores/toastStore';
-  import type { CreditCardModel, RideModel, ApiGetManyResponse } from '../lib/types/api';
+  import type { CreditCardModel, RideModel, ApiGetManyResponse, CreateBookingRequest } from '../lib/types/api';
+  import AppAlert from '../lib/components/AppAlert.svelte';
+  import TripDetailsDialog from '../lib/components/TripDetailsDialog.svelte';
+  import { getCarLabel } from '../lib/booking/display';
 
   let selectedMethod: 'card' | 'cash' = 'cash';
   let loading = false;
@@ -24,6 +28,29 @@
   let newCardExp = '';
   let addingCard = false;
   let errorMsg = '';
+  let showTripDetails = false;
+
+  $: carLabel = getCarLabel($bookingStore.carType);
+
+  function digitsOnly(value: string): string {
+    return value.replace(/\D/g, '');
+  }
+
+  function getCardValidationError(): string {
+    const cardNumber = digitsOnly(newCardNumber);
+    const cve = digitsOnly(newCardCve);
+    const expiration = digitsOnly(newCardExp);
+    const month = Number(expiration.slice(0, 2));
+
+    if (!/^\d{12,19}$/.test(cardNumber)) return 'يرجى إدخال رقم بطاقة صحيح';
+    if (newCardName.trim().length < 2) return 'يرجى إدخال الاسم الموجود على البطاقة';
+    if (!/^\d{3,4}$/.test(cve)) return 'يرجى إدخال رمز CVE صحيح';
+    if (!/^\d{4}$/.test(expiration) || month < 1 || month > 12) {
+      return 'يرجى إدخال تاريخ انتهاء صحيح بصيغة MMYY';
+    }
+
+    return '';
+  }
 
   onMount(async () => {
     const ownerId = get(userId);
@@ -46,19 +73,27 @@
   });
 
   async function handleAddCard() {
-      addingCard = true;
       errorMsg = '';
+      const validationError = getCardValidationError();
+      if (validationError) {
+          errorMsg = validationError;
+          return;
+      }
+      addingCard = true;
       try {
           const ownerId = get(userId);
           if (!ownerId) {
               errorMsg = 'يجب تسجيل الدخول أولاً لإضافة بطاقة';
               return;
           }
-          const expInt = parseInt(newCardExp, 10);
+          const cardNumber = digitsOnly(newCardNumber);
+          const cve = digitsOnly(newCardCve);
+          const expiration = digitsOnly(newCardExp);
+          const expInt = parseInt(expiration, 10);
           const payload = {
-              cardNumber: newCardNumber,
-              cardHolderName: newCardName.toUpperCase(),
-              cve: parseInt(newCardCve, 10),
+              cardNumber,
+              cardHolderName: newCardName.trim().toUpperCase(),
+              cve: parseInt(cve, 10),
               expiration: expInt
           };
           const res = await apiClient.post<any>(`/CreditCard?ownerId=${ownerId}`, payload);
@@ -87,6 +122,55 @@
     errorMsg = '';
     let bookingData = get(bookingStore);
 
+    if (selectedMethod === 'card' && !selectedCardId) {
+        errorMsg = 'يرجى اختيار بطاقة أو استخدام الدفع المباشر';
+        loading = false;
+        return;
+    }
+
+    if (bookingData.serviceType !== 'Inter-city') {
+        if (!bookingData.companyId) {
+            errorMsg = 'يرجى العودة واختيار شركة لحجز المطار.';
+            loading = false;
+            return;
+        }
+        if (!Number.isFinite(bookingData.pickupLatitude) || !Number.isFinite(bookingData.pickupLongitude)) {
+            errorMsg = 'إحداثيات نقطة الانطلاق غير مكتملة. يرجى العودة وتحديد الموقع مرة أخرى.';
+            loading = false;
+            return;
+        }
+
+        const payload: CreateBookingRequest = {
+            pickup: bookingData.pickupLocation,
+            dropoff: bookingData.dropoffLocation || bookingData.airport || '',
+            latitude: Number(bookingData.pickupLatitude),
+            longitude: Number(bookingData.pickupLongitude),
+            maxPassengers: bookingData.passengersCount || 1,
+            homeToAirport: bookingData.serviceType === 'To Airport',
+            companyId: bookingData.companyId,
+        };
+
+        try {
+            const booking = await createAirportBooking(payload);
+            toast.success('تم إنشاء حجز المطار بنجاح');
+            bookingStore.update((b) => ({
+                ...b,
+                bookingId: booking.id,
+                companyId: booking.companyId || b.companyId,
+                companyName: booking.companyName || b.companyName,
+            }));
+            currentRoute.set('history');
+        } catch (error: any) {
+            if (import.meta.env.DEV) {
+                console.error('فشل إنشاء حجز المطار:', error instanceof Error ? error.message : error);
+            }
+            errorMsg = error.message || 'تعذر إنشاء حجز المطار';
+        } finally {
+            loading = false;
+        }
+        return;
+    }
+
     if (!bookingData.rideOfferId && bookingData.pickupProvince && bookingData.dropoffProvince) {
         const seats = bookingData.searchSeatCount ?? bookingData.passengersCount ?? 1;
         try {
@@ -100,45 +184,56 @@
                 bookingData = get(bookingStore);
             }
         } catch (e) {
-            console.warn('تعذّر إعادة جلب rideOfferId:', e);
+            if (import.meta.env.DEV) {
+                console.warn('تعذّر إعادة جلب rideOfferId:', e instanceof Error ? e.message : e);
+            }
         }
     }
 
     if (!bookingData.rideOfferId) {
-        errorMsg =
-            'لا يوجد معرّف عرض للحجز. يجب أن يتضمّن كل صف في RideOffer/Search معرّف GUID (مثل id أو rideOfferId). جرّب «بين المحافظات»: احجز من السوق من جديد أو من شاشة تفاصيل المطار.';
+        errorMsg = 'يرجى اختيار عرض رحلة متاح أنشأه السائق للمتابعة.';
         loading = false;
         return;
     }
+
     const offerIdNormalized = normalizeRideOfferGuidString(bookingData.rideOfferId);
     if (!isRideOfferGuid(offerIdNormalized)) {
-        errorMsg = 'معرّف عرض الرحلة غير صالح (rideOfferId). يرجى العودة واختيار رحلة متاحة.';
-        loading = false;
-        return;
-    }
-    if (selectedMethod === 'card' && !selectedCardId) {
-        errorMsg = 'يرجى اختيار بطاقة أو استخدام الدفع المباشر';
+        errorMsg = 'معرّف عرض الرحلة غير صالح. يرجى العودة واختيار رحلة أنشأها السائق من التطبيق.';
         loading = false;
         return;
     }
 
     try {
-        // Request the ride
+        const pickupLatitude = Number.isFinite(bookingData.pickupLatitude)
+            ? Number(bookingData.pickupLatitude)
+            : 33.3128;
+        const pickupLongitude = Number.isFinite(bookingData.pickupLongitude)
+            ? Number(bookingData.pickupLongitude)
+            : 44.3615;
+
+        // إرسال الطلب إلى السيرفر بـ rideOfferId الفعلي للرحلة التي أنشأها السائق
         const response = await apiClient.post<any>('/Ride', {
             rideOfferId: offerIdNormalized,
+            pickupLatitude,
+            pickupLongitude,
         });
-        
-        if (response.data && response.data.data) {
-            const ride: RideModel = response.data.data;
-            toast.success("تم إرسال الطلب بنجاح");
-            bookingStore.update(b => ({ ...b, bookingId: ride.id }));
+
+        if (response.data && (response.data.data || response.data.success)) {
+            const ride: RideModel = response.data.data || response.data;
+            toast.success("تم إرسال الطلب للسائق بنجاح");
+            bookingStore.update(b => ({ ...b, bookingId: ride.id || offerIdNormalized }));
             currentRoute.set('history');
         } else {
-            errorMsg = response.data.message || 'خطأ في إنشاء الحجز';
+            errorMsg = response.data.message || 'فشل إرسال الطلب للسائق.';
         }
     } catch (error: any) {
-        console.error("فشل إرسال الحجز:", error);
-        errorMsg = error.message || "فشلت عملية الدفع أو الاتصال بالسيرفر";
+        const raw = error?.response?.data;
+        const msg = typeof raw === 'object' && raw !== null && 'message' in raw
+            ? String((raw as { message?: string }).message)
+            : typeof raw === 'string'
+            ? raw
+            : error?.message;
+        errorMsg = msg || "فشل الاتصال بالسيرفر لإرسال الطلب للسائق";
     } finally {
         loading = false;
     }
@@ -181,9 +276,7 @@
     {/if}
 
     {#if errorMsg}
-        <div class="w-full bg-error-container/80 border border-error/20 text-on-error-container text-[11px] font-semibold p-3.5 rounded-2xl text-right" role="alert">
-            {errorMsg}
-        </div>
+        <AppAlert type="error" title="تعذر إكمال الحجز" message={errorMsg} />
     {/if}
 
     <section class="w-full bg-surface-container-lowest p-6 rounded-[24px] shadow-sm border border-outline-variant/10 text-right relative overflow-hidden">
@@ -196,9 +289,34 @@
          <div class="mt-6 flex flex-row-reverse gap-3 pt-6 border-t border-outline-variant/10">
               <div class="flex-1">
                   <span class="block text-[10px] text-on-surface-variant mb-1">نوع السيارة</span>
-                  <span class="block text-sm font-bold">{$bookingStore.carType === 'suv' ? 'عائلي' : ($bookingStore.carType === 'van' ? 'فان' : 'سيدان')}</span>
+                  <span class="block text-sm font-bold">{carLabel}</span>
+                  {#if $bookingStore.carType === 'vip'}
+                      <span class="mt-1 block text-[10px] font-bold text-on-surface-variant">
+                          حتى {$bookingStore.vipPassengerCapacity ?? 7} ركاب و {$bookingStore.vipLuggageCapacity ?? 8} حقائب
+                      </span>
+                  {/if}
               </div>
          </div>
+
+         <div class="mt-4 flex flex-row-reverse justify-between items-center bg-primary/10 p-4 rounded-2xl border border-primary/20">
+             <span class="text-xs font-bold text-on-surface">السعر الديناميكي المحسوب من الخريطة:</span>
+             <span class="text-lg font-black text-primary" dir="ltr">
+               {($bookingStore.price || 15000).toLocaleString('en-US')} د.ع
+             </span>
+         </div>
+
+         <button
+            type="button"
+            on:click={() => showTripDetails = true}
+            class="mt-5 flex w-full items-center justify-between rounded-2xl border border-outline-variant/15 bg-surface-container-low px-4 py-3 text-right transition-all active:scale-[0.98]"
+            dir="rtl"
+         >
+            <span class="flex items-center gap-2 text-sm font-black text-on-surface">
+                <span class="material-symbols-outlined text-primary text-[20px]">route</span>
+                تفاصيل الرحلة
+            </span>
+            <span class="material-symbols-outlined rotate-180 text-primary text-[18px]">arrow_back</span>
+         </button>
     </section>
 
     <section class="w-full">
@@ -266,22 +384,22 @@
         
         <div>
             <label for="cardNumber" class="text-[10px] text-on-surface-variant font-bold">رقم البطاقة (16 رقم)</label>
-            <input id="cardNumber" bind:value={newCardNumber} placeholder="1111222233334444" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
+            <input id="cardNumber" bind:value={newCardNumber} inputmode="numeric" autocomplete="cc-number" maxlength="23" placeholder="1111222233334444" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
         </div>
 
         <div>
             <label for="cardName" class="text-[10px] text-on-surface-variant font-bold">الاسم على البطاقة</label>
-            <input id="cardName" bind:value={newCardName} placeholder="ALI HASSAN" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm uppercase outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
+            <input id="cardName" bind:value={newCardName} autocomplete="cc-name" maxlength="80" placeholder="ALI HASSAN" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm uppercase outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
         </div>
 
         <div class="flex gap-4">
             <div class="flex-1">
                 <label for="cardExp" class="text-[10px] text-on-surface-variant font-bold">انتهاء (MMYY)</label>
-                <input id="cardExp" bind:value={newCardExp} placeholder="1229" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
+                <input id="cardExp" bind:value={newCardExp} inputmode="numeric" autocomplete="cc-exp" maxlength="4" placeholder="1229" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
             </div>
             <div class="flex-[0.5]">
                 <label for="cardCve" class="text-[10px] text-on-surface-variant font-bold">CVE</label>
-                <input id="cardCve" bind:value={newCardCve} type="password" placeholder="***" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
+                <input id="cardCve" bind:value={newCardCve} type="password" inputmode="numeric" autocomplete="cc-csc" maxlength="4" placeholder="***" class="w-full bg-surface-container py-3 px-4 rounded-xl text-right mt-1 text-sm outline-none focus:ring-1 focus:ring-primary/40 text-on-surface" />
             </div>
         </div>
 
@@ -302,3 +420,9 @@
         </button>
     </div>
 </div>
+
+<TripDetailsDialog
+    open={showTripDetails}
+    booking={$bookingStore}
+    on:click={() => showTripDetails = false}
+/>

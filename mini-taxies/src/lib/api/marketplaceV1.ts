@@ -78,12 +78,12 @@ export const patchCarComfortScore = (id: string | number, data: unknown) =>
   patchBare(`${V1}/Car/${id}/comfort-score`, data);
 export const patchCarOwner = (id: string | number, data: unknown) => patchBare(`${V1}/Car/${id}/owner`, data);
 
-// ——— Company (اسم الدالة كما في العميل المُولَّد: getCompanys) ———
-export const getCompanys = (p?: MarketplaceListParams) => getBare(`${V1}/Company${listQs(p)}`);
-export const createCompany = (data: unknown) => postBare(`${V1}/Company`, data);
-export const getCompanyById = (id: string | number) => getBare(`${V1}/Company/${id}`);
-export const updateCompany = (id: string | number, data: unknown) => putBare(`${V1}/Company/${id}`, data);
-export const deleteCompany = (id: string | number) => deleteBare(`${V1}/Company/${id}`);
+// ——— Company (دعم كامل للتسعير الديناميكي basePrice, pricePerKm, pricePerKmInRushHour) ———
+export const getCompanys = (p?: MarketplaceListParams) => getBare<any>(`${V1}/Company${listQs(p)}`);
+export const createCompany = (data: { name: string; reputationScore?: number; basePrice?: number; pricePerKm?: number; pricePerKmInRushHour?: number } | unknown) => postBare<any>(`${V1}/Company`, data);
+export const getCompanyById = (id: string | number) => getBare<any>(`${V1}/Company/${id}`);
+export const updateCompany = (id: string | number, data: { name?: string; reputationScore?: number; status?: boolean; basePrice?: number; pricePerKm?: number; pricePerKmInRushHour?: number } | unknown) => putBare<any>(`${V1}/Company/${id}`, data);
+export const deleteCompany = (id: string | number) => deleteBare<any>(`${V1}/Company/${id}`);
 
 // ——— Customer ———
 export const getCustomers = (p?: MarketplaceListParams) => getBare(`${V1}/Customer${listQs(p)}`);

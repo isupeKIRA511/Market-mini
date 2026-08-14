@@ -45,13 +45,6 @@
                <svg width="20" height="20" viewBox="0 0 24 24" fill={isItemActive(item.id, $currentRoute) ? "#1D1B1C" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                </svg>
-          {:else if item.id === 'history'}
-               <svg width="20" height="20" viewBox="0 0 24 24" fill={isItemActive(item.id, $currentRoute) ? "#1D1B1C" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="10" width="18" height="10" rx="2" ry="2"></rect>
-                  <path d="M3 10L6 4h12l3 6"></path>
-                  <circle cx="7.5" cy="16.5" r="1.5" fill={isItemActive(item.id, $currentRoute) ? "white" : "currentColor"} stroke="none"></circle>
-                  <circle cx="16.5" cy="16.5" r="1.5" fill={isItemActive(item.id, $currentRoute) ? "white" : "currentColor"} stroke="none"></circle>
-               </svg>
           {:else if item.id === 'profile'}
                <svg width="20" height="20" viewBox="0 0 24 24" fill={isItemActive(item.id, $currentRoute) ? "#1D1B1C" : "none"} stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>

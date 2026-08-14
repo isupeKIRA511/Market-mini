@@ -30,6 +30,45 @@ export interface ApiStatusResponse {
     message: string;
 }
 
+export type BookingStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Completed' | string;
+
+export interface CreateBookingRequest {
+    pickup: string;
+    dropoff: string;
+    latitude: number;
+    longitude: number;
+    maxPassengers: number;
+    homeToAirport: boolean;
+    companyId: string;
+}
+
+export interface BookingResponse {
+    id: string;
+    pickup: string;
+    dropoff: string;
+    latitude: number;
+    longitude: number;
+    maxPassengers: number;
+    homeToAirport: boolean;
+    status: BookingStatus;
+    customerId: string;
+    customerName: string;
+    companyId: string;
+    companyName: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CompanyModel {
+    id?: string;
+    name: string;
+    reputationScore?: number;
+    status?: boolean;
+    basePrice?: number;
+    pricePerKm?: number;
+    pricePerKmInRushHour?: number;
+}
+
 export interface CustomerModel {
     id: string;           // Guid
     fullName: string;
@@ -102,8 +141,26 @@ export interface ApiMyRidesResponse {
     message: string;
 }
 
+/** POST /RideOffer - Create Offer (Driver) according to frontend_contract.md (price removed) */
+export interface CreateRideOfferRequest {
+    pickupProvince: string;
+    dropoffProvince: string;
+    destinationLatitude: number;
+    destinationLongitude: number;
+    maxPassengers: number;
+    oneTripOnly?: boolean;
+}
+
+/** POST /Ride - Request a Ride (Customer) according to frontend_contract.md (with pickup coordinates) */
+export interface RequestRideRequest {
+    rideOfferId: string;
+    pickupLatitude: number;
+    pickupLongitude: number;
+}
+
 /** GET /Ride/{id}/status — للاستطلاع (رسالة عربية + رمز الحالة) */
 export interface RideStatusPayload {
     message: string;
     status: string;
 }
+

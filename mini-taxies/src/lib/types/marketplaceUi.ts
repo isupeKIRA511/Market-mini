@@ -6,6 +6,7 @@ export type DriverCardUi = {
   bookingOfferId?: string;
   type: 'featured' | 'small' | 'simple';
   name: string;
+  driverName?: string;
   rating: number;
   reviews: string;
   badge: string;

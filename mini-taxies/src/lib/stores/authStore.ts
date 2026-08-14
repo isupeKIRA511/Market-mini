@@ -9,13 +9,24 @@ const storedToken = typeof localStorage !== 'undefined' ? localStorage.getItem('
 const storedUserId = typeof localStorage !== 'undefined' ? localStorage.getItem('userId') : '';
 const storedUserData = typeof localStorage !== 'undefined' ? localStorage.getItem('userData') : null;
 
+function parseStoredUserData(raw: string | null): AuthUserSnapshot | null {
+    if (!raw) return null;
+    try {
+        const parsed = JSON.parse(raw) as Partial<AuthUserSnapshot>;
+        if (typeof parsed.id === 'string' && typeof parsed.name === 'string') {
+            return { id: parsed.id, name: parsed.name };
+        }
+    } catch {
+        localStorage.removeItem('userData');
+    }
+    return null;
+}
+
 export const isAuthenticated = writable<boolean>(!!storedToken);
 export const serverToken = writable<string>(storedToken || '');
 export const userId = writable<string>(storedUserId || '');
 export const authCode = writable<string>('');
-export const userData = writable<AuthUserSnapshot | null>(
-    storedUserData ? JSON.parse(storedUserData) as AuthUserSnapshot : null
-);
+export const userData = writable<AuthUserSnapshot | null>(parseStoredUserData(storedUserData));
 
 // Persistence logic
 if (typeof localStorage !== 'undefined') {
@@ -66,6 +77,8 @@ export const logout = () => {
     userData.set(null);
     isAuthenticated.set(false);
     if (typeof localStorage !== 'undefined') {
-        localStorage.clear();
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userData');
     }
 };

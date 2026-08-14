@@ -1,0 +1,18 @@
+{
+  "files.watcherExclude": {
+    "**/.git/**": true,
+    "**/.vercel/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true
+  },
+  "search.exclude": {
+    "**/.vercel": true,
+    "**/dist": true,
+    "**/node_modules": true
+  },
+  "typescript.tsserver.watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority"
+  }
+}
